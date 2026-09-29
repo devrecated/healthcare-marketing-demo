@@ -154,12 +154,29 @@ export type SurgeryCase = {
   charges: ChargeLine[]
 }
 
+// One approved device line from a scanned compliance form. Written only after a
+// human approves the extraction in the intake review UI.
+export type UsageLogEntry = {
+  id: string
+  formId: string | null
+  procedureDate: string | null
+  centerHint: string | null
+  supplyId: string
+  sku: string
+  device: string
+  qty: number
+  approvedBy: string
+  rawStickerText: string
+  recordedAt: string
+}
+
 export type AppState = {
   patients: Patient[]
   appointments: Appointment[]
   supplies: Supply[]
   surgeries: SurgeryCase[]
   reconciliations: ReconciliationSession[]
+  usageLog: UsageLogEntry[]
 }
 
 export function patientName(patient: Pick<Patient, "firstName" | "lastName">) {

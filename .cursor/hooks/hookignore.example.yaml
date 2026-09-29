@@ -29,6 +29,7 @@ hooks:
   gate-prompt: true
   ticket-progress-stop: true
   plan-completion-check: true
+  send-usage-and-knowledge: true
   version-changelog-nudge: true
   owner-acceptance-nudge: true
   release-acceptance-guard: true

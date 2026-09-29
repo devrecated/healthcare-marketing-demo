@@ -2,7 +2,8 @@
  * Copyright (c) 2026 Devrecated
  * SPDX-License-Identifier: MIT
  *
- * Read-only kit tools for the Autodevelop stdio MCP. No mail, issues, or deploys.
+ * Kit tools for the Autodevelop stdio MCP. Read-only except kit_knowledge_stage,
+ * which appends a sanitized local knowledge note. No mail, issues, or deploys.
  */
 import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -11,11 +12,20 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadConfig, workspaceRootFromHook } from "../scripts/config-load.mjs";
 import { readPeopleFile, validatePeople } from "../scripts/people.mjs";
 import { readSession, shouldAskProgress } from "../scripts/session.mjs";
+import { KNOWLEDGE_KINDS, readPending, stageKnowledge } from "../scripts/knowledge-stage.mjs";
 
 export const WORKSPACE_ROOT_REQUIRED =
   "workspace_root is required (the consumer git/app root). User-scope plugin cwd is the plugin, not the workspace.";
 
-export const TOOL_NAMES = ["kit_doctor", "kit_config", "kit_session", "kit_people", "kit_git"];
+export const TOOL_NAMES = [
+  "kit_doctor",
+  "kit_config",
+  "kit_session",
+  "kit_people",
+  "kit_git",
+  "kit_knowledge_stage",
+  "kit_knowledge_pending",
+];
 
 export const resolveWorkspaceRoot = (args = {}) => {
   const raw = args.workspace_root ?? args.workspaceRoot;
@@ -131,12 +141,58 @@ export const kitGit = (root) => {
   };
 };
 
+const originRemote = (root) => {
+  const remote = git(root, ["remote", "get-url", "origin"]);
+  return remote.status === 0 ? remote.stdout.trim() : "";
+};
+
+export const kitKnowledgeStage = (root, args = {}) => {
+  const note = args.note ?? args.text ?? "";
+  const { session } = readSession(root);
+  const entry = stageKnowledge(root, {
+    note,
+    title: args.title ?? "",
+    kind: args.kind ?? "note",
+    repoUrl: originRemote(root),
+    ticket: session?.issue ?? null,
+  });
+  if (!entry) {
+    throw new Error(
+      "note is required: a short knowledge statement (decision, change, blocker, learning) — not the chat transcript.",
+    );
+  }
+  return {
+    staged: true,
+    kind: entry.kind,
+    title: entry.title,
+    repo_url: entry.repo_url,
+    ticket: entry.ticket,
+    pending: readPending(root).length,
+  };
+};
+
+export const kitKnowledgePending = (root) => {
+  const entries = readPending(root);
+  return {
+    count: entries.length,
+    repo_url: entries.length ? entries[entries.length - 1].repo_url : null,
+    ticket: entries.length ? entries[entries.length - 1].ticket : null,
+    preview: entries.slice(0, 10).map((entry) => ({
+      kind: entry.kind,
+      title: entry.title,
+      at: entry.at,
+    })),
+  };
+};
+
 export const HANDLERS = {
   kit_doctor: (root, env) => kitDoctor(root, env),
   kit_config: (root) => kitConfig(root),
   kit_session: (root) => kitSession(root),
   kit_people: (root) => kitPeople(root),
   kit_git: (root) => kitGit(root),
+  kit_knowledge_stage: (root, env, args) => kitKnowledgeStage(root, args),
+  kit_knowledge_pending: (root) => kitKnowledgePending(root),
 };
 
 export const callTool = async (name, args = {}, env = process.env) => {
@@ -145,7 +201,33 @@ export const callTool = async (name, args = {}, env = process.env) => {
     throw new Error(`Unknown tool: ${name}. Allowed: ${TOOL_NAMES.join(", ")}`);
   }
   const root = resolve(resolveWorkspaceRoot(args));
-  return handler(root, env);
+  return handler(root, env, args);
+};
+
+const WORKSPACE_ROOT_PROP = {
+  workspace_root: {
+    type: "string",
+    description: "Consumer git/app root. Required because plugin cwd is the plugin tree.",
+  },
+};
+
+const EXTRA_PROPS = {
+  kit_knowledge_stage: {
+    note: {
+      type: "string",
+      description: "One short knowledge statement (a decision, change, blocker, or learning). Never the chat transcript or secrets.",
+    },
+    title: { type: "string", description: "Optional short label for the note." },
+    kind: {
+      type: "string",
+      enum: KNOWLEDGE_KINDS,
+      description: "Note kind. Defaults to note.",
+    },
+  },
+};
+
+const REQUIRED_PROPS = {
+  kit_knowledge_stage: ["workspace_root", "note"],
 };
 
 export const toolDefinitions = () =>
@@ -158,15 +240,14 @@ export const toolDefinitions = () =>
       kit_session: "Active board session: issue, title, timestamps, whether a progress comment is due.",
       kit_people: "people.json present, validation errors, developer and stakeholder counts only.",
       kit_git: "Local git only (no fetch): branch, dirty, HEAD vs origin/master and origin/release if those refs exist.",
+      kit_knowledge_stage:
+        "Stage one short, substantial knowledge note locally (repo + ticket scoped). The post-chat hook flushes staged notes to the org store. Never pass the chat transcript or secrets.",
+      kit_knowledge_pending:
+        "Count and preview knowledge notes staged this session but not yet flushed to the org store.",
     }[name],
     inputSchema: {
       type: "object",
-      properties: {
-        workspace_root: {
-          type: "string",
-          description: "Consumer git/app root. Required because plugin cwd is the plugin tree.",
-        },
-      },
-      required: ["workspace_root"],
+      properties: { ...WORKSPACE_ROOT_PROP, ...(EXTRA_PROPS[name] || {}) },
+      required: REQUIRED_PROPS[name] || ["workspace_root"],
     },
   }));

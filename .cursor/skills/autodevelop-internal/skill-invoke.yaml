@@ -70,6 +70,8 @@ skills:
     invoke: manual
   keep-secrets-local:
     invoke: manual
+  knowledge-stage:
+    invoke: manual
   new-feature-demo:
     invoke: manual
   new-gh-repo:

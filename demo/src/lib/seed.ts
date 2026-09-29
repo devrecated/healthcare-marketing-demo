@@ -498,5 +498,6 @@ export function seedState(): AppState {
         ],
       },
     ],
+    usageLog: [],
   }
 }
