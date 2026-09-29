@@ -25,6 +25,7 @@ yarn-error.log*
 # OS / editor cruft
 .DS_Store
 Thumbs.db
+._*
 
 # Cursor local (machine-specific state, not shared)
 .cursor/local/
