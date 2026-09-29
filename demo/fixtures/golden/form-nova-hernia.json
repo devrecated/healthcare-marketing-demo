@@ -1,0 +1,32 @@
+{
+  "center_hint": "Northern Virginia Surgery Center",
+  "procedure_date": "2026-09-24",
+  "patient_ref": "ACME-NOVA-1550",
+  "form_id": "PU-2026-0914",
+  "devices": [
+    {
+      "product_name": "Hernia mesh 15cm",
+      "manufacturer": "Bard",
+      "ref": "IMP-MSH-15",
+      "udi_or_barcode": "(01)00841112223330",
+      "lot": "MSH-1550",
+      "qty": 1
+    },
+    {
+      "product_name": "Laparoscopic clip applier",
+      "manufacturer": "Teleflex",
+      "ref": "CON-CLIP-2",
+      "udi_or_barcode": "(01)00846667778880",
+      "lot": "CLIP-0202",
+      "qty": 1
+    },
+    {
+      "product_name": "Gauze sponges",
+      "manufacturer": "Medline",
+      "ref": "CON-GAU-4",
+      "udi_or_barcode": "(01)00842223334440",
+      "lot": "GAU-4004",
+      "qty": 3
+    }
+  ]
+}

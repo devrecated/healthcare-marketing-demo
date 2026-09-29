@@ -95,6 +95,10 @@
         "command": "autodevelop hook worktree-status",
         "timeout": 8,
         "loop_limit": 1
+      },
+      {
+        "command": "autodevelop hook send-usage-and-knowledge",
+        "timeout": 8
       }
     ]
   }

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="960" viewBox="0 0 720 960">
+  <rect width="720" height="960" fill="#ffffff"/>
+  <rect x="20" y="20" width="680" height="920" fill="none" stroke="#999" stroke-width="1"/>
+  <text x="40" y="55" font-family="Helvetica, Arial" font-size="20" font-weight="bold" fill="#1c2b1c">Acme Healthcare</text>
+  <text x="40" y="78" font-family="Helvetica, Arial" font-size="14" fill="#444">Point-of-Use Device Compliance Form (SYNTHETIC — no PHI)</text>
+  <line x1="40" y1="92" x2="680" y2="92" stroke="#ccc" stroke-width="1"/>
+  <text x="40" y="118" font-family="Helvetica, Arial" font-size="12" fill="#222">Center: Richmond Surgery Center      Procedure date: 2026-09-22</text>
+  <text x="40" y="136" font-family="Helvetica, Arial" font-size="12" fill="#222">Patient ref: ACME-RVA-4471      Form ID: PU-2026-0912</text>
+  
+    <g transform="translate(40 150)">
+      <rect x="0" y="0" width="640" height="120" rx="6" fill="#fffdf5" stroke="#c9c2ad" stroke-width="1.5"/>
+      <rect x="0" y="0" width="640" height="22" rx="6" fill="#eef1e6"/>
+      <text x="10" y="15" font-family="Helvetica, Arial" font-size="11" font-weight="bold" fill="#333">DEVICE LABEL — PEEL &amp; AFFIX</text>
+      <text x="10" y="42" font-family="Helvetica, Arial" font-size="14" font-weight="bold" fill="#111">Total knee implant set</text>
+      <text x="10" y="60" font-family="Helvetica, Arial" font-size="11" fill="#444">Mfr: ZimVie   REF: IMP-KNEE-01</text>
+      <text x="10" y="76" font-family="Courier, monospace" font-size="11" fill="#111">UDI (01)00841234567890</text>
+      <text x="10" y="92" font-family="Courier, monospace" font-size="11" fill="#111">LOT KNE-4471    QTY 1</text>
+      <rect x="10" y="98" width="1" height="34" fill="#111"/><rect x="15" y="98" width="1" height="34" fill="#111"/><rect x="19" y="98" width="3" height="34" fill="#111"/><rect x="26" y="98" width="2" height="34" fill="#111"/><rect x="33" y="98" width="1" height="34" fill="#111"/><rect x="38" y="98" width="3" height="34" fill="#111"/><rect x="44" y="98" width="2" height="34" fill="#111"/><rect x="51" y="98" width="1" height="34" fill="#111"/><rect x="55" y="98" width="2" height="34" fill="#111"/><rect x="61" y="98" width="2" height="34" fill="#111"/><rect x="67" y="98" width="2" height="34" fill="#111"/><rect x="73" y="98" width="2" height="34" fill="#111"/>
+      <text x="630" y="112" text-anchor="end" font-family="Courier, monospace" font-size="9" fill="#666">0100841234567890</text>
+    </g>
+    <g transform="translate(40 290)">
+      <rect x="0" y="0" width="640" height="120" rx="6" fill="#fffdf5" stroke="#c9c2ad" stroke-width="1.5"/>
+      <rect x="0" y="0" width="640" height="22" rx="6" fill="#eef1e6"/>
+      <text x="10" y="15" font-family="Helvetica, Arial" font-size="11" font-weight="bold" fill="#333">DEVICE LABEL — PEEL &amp; AFFIX</text>
+      <text x="10" y="42" font-family="Helvetica, Arial" font-size="14" font-weight="bold" fill="#111">Bone cement</text>
+      <text x="10" y="60" font-family="Helvetica, Arial" font-size="11" fill="#444">Mfr: Stryker   REF: CON-CEM-04</text>
+      <text x="10" y="76" font-family="Courier, monospace" font-size="11" fill="#111">UDI (01)00849876543210</text>
+      <text x="10" y="92" font-family="Courier, monospace" font-size="11" fill="#111">LOT CEM-2231    QTY 2</text>
+      <rect x="10" y="98" width="1" height="34" fill="#111"/><rect x="15" y="98" width="1" height="34" fill="#111"/><rect x="19" y="98" width="3" height="34" fill="#111"/><rect x="26" y="98" width="1" height="34" fill="#111"/><rect x="32" y="98" width="2" height="34" fill="#111"/><rect x="37" y="98" width="3" height="34" fill="#111"/><rect x="44" y="98" width="1" height="34" fill="#111"/><rect x="50" y="98" width="2" height="34" fill="#111"/><rect x="55" y="98" width="2" height="34" fill="#111"/><rect x="61" y="98" width="2" height="34" fill="#111"/><rect x="67" y="98" width="2" height="34" fill="#111"/><rect x="73" y="98" width="2" height="34" fill="#111"/>
+      <text x="630" y="112" text-anchor="end" font-family="Courier, monospace" font-size="9" fill="#666">0100849876543210</text>
+    </g>
+    <g transform="translate(40 430)">
+      <rect x="0" y="0" width="640" height="120" rx="6" fill="#fffdf5" stroke="#c9c2ad" stroke-width="1.5"/>
+      <rect x="0" y="0" width="640" height="22" rx="6" fill="#eef1e6"/>
+      <text x="10" y="15" font-family="Helvetica, Arial" font-size="11" font-weight="bold" fill="#333">DEVICE LABEL — PEEL &amp; AFFIX</text>
+      <text x="10" y="42" font-family="Helvetica, Arial" font-size="14" font-weight="bold" fill="#111">Orthopedic drape pack</text>
+      <text x="10" y="60" font-family="Helvetica, Arial" font-size="11" fill="#444">Mfr: Medline   REF: CON-DRP-12</text>
+      <text x="10" y="76" font-family="Courier, monospace" font-size="11" fill="#111">UDI (01)00847778889990</text>
+      <text x="10" y="92" font-family="Courier, monospace" font-size="11" fill="#111">LOT DRP-8890    QTY 1</text>
+      <rect x="10" y="98" width="1" height="34" fill="#111"/><rect x="15" y="98" width="1" height="34" fill="#111"/><rect x="19" y="98" width="3" height="34" fill="#111"/><rect x="26" y="98" width="2" height="34" fill="#111"/><rect x="32" y="98" width="2" height="34" fill="#111"/><rect x="39" y="98" width="3" height="34" fill="#111"/><rect x="47" y="98" width="1" height="34" fill="#111"/><rect x="51" y="98" width="1" height="34" fill="#111"/><rect x="55" y="98" width="2" height="34" fill="#111"/><rect x="61" y="98" width="2" height="34" fill="#111"/><rect x="67" y="98" width="2" height="34" fill="#111"/><rect x="73" y="98" width="2" height="34" fill="#111"/>
+      <text x="630" y="112" text-anchor="end" font-family="Courier, monospace" font-size="9" fill="#666">0100847778889990</text>
+    </g>
+  <text x="40" y="920" font-family="Helvetica, Arial" font-size="10" fill="#888">Staff affix device labels above after each procedure. Scan and submit to inventory manager.</text>
+</svg>

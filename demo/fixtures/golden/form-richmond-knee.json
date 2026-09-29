@@ -1,0 +1,32 @@
+{
+  "center_hint": "Richmond Surgery Center",
+  "procedure_date": "2026-09-22",
+  "patient_ref": "ACME-RVA-4471",
+  "form_id": "PU-2026-0912",
+  "devices": [
+    {
+      "product_name": "Total knee implant set",
+      "manufacturer": "ZimVie",
+      "ref": "IMP-KNEE-01",
+      "udi_or_barcode": "(01)00841234567890",
+      "lot": "KNE-4471",
+      "qty": 1
+    },
+    {
+      "product_name": "Bone cement",
+      "manufacturer": "Stryker",
+      "ref": "CON-CEM-04",
+      "udi_or_barcode": "(01)00849876543210",
+      "lot": "CEM-2231",
+      "qty": 2
+    },
+    {
+      "product_name": "Orthopedic drape pack",
+      "manufacturer": "Medline",
+      "ref": "CON-DRP-12",
+      "udi_or_barcode": "(01)00847778889990",
+      "lot": "DRP-8890",
+      "qty": 1
+    }
+  ]
+}

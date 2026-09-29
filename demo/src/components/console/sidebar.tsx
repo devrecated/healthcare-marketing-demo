@@ -7,9 +7,11 @@ import {
   CalendarClock,
   ChevronsLeft,
   ChevronsRight,
+  ClipboardList,
   LayoutDashboard,
   LogOut,
   Package,
+  ScanLine,
   Scissors,
   Users,
 } from "lucide-react"
@@ -23,6 +25,8 @@ const links = [
   { href: "/patients", label: "Patients", icon: Users },
   { href: "/appointments", label: "Appointments", icon: CalendarClock },
   { href: "/inventory", label: "Supplies", icon: Package },
+  { href: "/inventory/intake", label: "Scan intake", icon: ScanLine },
+  { href: "/inventory/usage", label: "Usage log", icon: ClipboardList },
   { href: "/surgery-costs", label: "Surgery costs", icon: Scissors },
   { href: "/risk-predictor", label: "Risk predictor", icon: Activity },
 ]
