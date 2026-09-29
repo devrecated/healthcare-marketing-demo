@@ -1,0 +1,26 @@
+---
+description: Frontend files of any stack load Autodevelop frontend playbooks
+globs:
+  - "**/*.{tsx,jsx,vue,svelte,html}"
+  - "**/*.{css,scss,sass,less}"
+  - "web/**"
+  - "app/**"
+  - "**/components/**"
+  - "**/pages/**"
+  - "**/layouts/**"
+alwaysApply: false
+---
+
+# Frontend files load frontend playbooks
+
+Copyright (c) 2026 Devrecated.
+
+When these files are in play, load Autodevelop frontend playbooks (or honor `/ui` if they typed it). Use what comes back. Do not invent that text. Do not name a third-party skill as the tool.
+
+Never say bucket, MCP, or tool names in chat.
+
+If playbooks do not load, say only: Autodevelop is not connected. Run `npx autodevelop login` and reload this window. Then stop.
+
+Must never: mail, deploy, expose vendor skill names as tools.
+
+Product work still needs a bound ticket. See [ticket-required](../process/ticket-required.mdc). Wrapper rules: [mcp-wrappers](../process/mcp-wrappers.mdc).

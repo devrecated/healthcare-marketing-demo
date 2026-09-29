@@ -1,0 +1,69 @@
+{
+  "copyright": "Copyright (c) 2026 Devrecated.",
+  "board": {
+    "provider": "github"
+  },
+  "github": {
+    "owner": "example-org",
+    "repo": "example-repo",
+    "projectNumber": 1,
+    "projectId": "PVT_xxxxxxxxxxxxxxxx"
+  },
+  "fields": {
+    "status": {
+      "id": "PVTSSF_xxxxxxxxxxxxxxxx",
+      "options": {
+        "Backlog": "",
+        "Ready": "",
+        "In progress": "",
+        "In review": "",
+        "Blocked": "",
+        "Done": ""
+      }
+    },
+    "priority": {
+      "id": "PVTSSF_xxxxxxxxxxxxxxxx",
+      "options": {
+        "P0": "",
+        "P1": "",
+        "P2": "",
+        "P3": ""
+      }
+    },
+    "targetDate": { "id": "PVTF_xxxxxxxxxxxxxxxx" },
+    "startDate": { "id": "PVTF_xxxxxxxxxxxxxxxx" }
+  },
+  "mail": {
+    "firestoreProject": "example-stg",
+    "allowlist": [],
+    "allowOverridePhrase": "send anyway"
+  },
+  "forbiddenProjects": ["example-production"],
+  "preview": {
+    "firebaseProject": "example-stg",
+    "hostingTarget": "staging",
+    "siteId": "example-stg",
+    "baseBranch": "master",
+    "channelPrefix": "pr-",
+    "expires": "14d",
+    "corsHostnameRegex": "^example-stg--[a-z0-9-]+\\.web\\.app$"
+  },
+  "stakeholders": [],
+  "productName": "Example product",
+  "stakeholderLabel": "Client",
+  "singleBranch": false,
+  "branches": {
+    "staging": "master",
+    "production": "release"
+  },
+  "docs": {
+    "home": "https://docs.example.com",
+    "changelog": "https://docs.example.com/changelog",
+    "tree": "docs/docs.example.com",
+    "stakeholderGuide": "docs/STAKEHOLDER_AUTOMATION.md"
+  },
+  "firebase": {
+    "staging": "example-stg",
+    "production": "example-production"
+  }
+}

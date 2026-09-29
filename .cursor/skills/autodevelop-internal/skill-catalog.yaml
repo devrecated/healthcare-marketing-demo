@@ -1,0 +1,761 @@
+# Autodevelop skill catalog
+# Copyright (c) 2026 Devrecated.
+#
+# Trees: autodevelop (sold) | third-party (vendored) | client (<client-name> only)
+# status: in-kit | import | planned | client
+# invoke: from OTW skill-invoke.yaml
+
+version: 1
+updated: 2026-08-31
+companion:
+  invoke_registry: skill-invoke.yaml
+  hook_toggles: ../../hooks/hookignore.example.yaml
+  demo_registry: process/feature-demo/demo-flags.yaml
+  docs_inventory: "client VitePress: docs-inventory.yaml + business/videos/*.yaml"
+
+trees:
+  autodevelop:
+    path: .cursor/skills/autodevelop-internal
+    hosted: services/host/skills/autodevelop
+  third-party:
+    path: services/host/skills/third-party
+  client:
+    path: .cursor/skills/<client-name>
+  workspace:
+    path: .autodevelop
+
+# Block lists only. parseSimpleYaml in hooks/autodevelop/lib.mjs does not read
+# flow maps or flow arrays. router.mjs and flows-check.mjs both read this file.
+loops:
+  ticket_lifecycle:
+    description: Chat or notes become a board ticket, get claimed, implemented, verified, then mailed.
+    bucket: board
+    gate_class: mail
+    resume_from: pull-project-work
+    steps:
+      - identify-skills
+      - ingest-notes-to-project
+      - create-ticket
+      - pull-project-work
+      - create-branch
+      - start-work-update
+      - implement-from-plan
+      - ticket-progress
+      - verify-ticket
+      - deploy-pr-preview
+      - share-stakeholder-update
+      - ask-adam
+    optional:
+      - ingest-notes-to-project
+      - start-work-update
+      - deploy-pr-preview
+      - share-stakeholder-update
+      - ask-adam
+  weekly_reporting:
+    description: Recap shipped work and delivery score from hosted jobs, then email. Must stay cheap to run.
+    bucket: message
+    gate_class: mail
+    resume_from: weekly-status-update
+    affordability: do not reinstall heavy PDF or pptx stacks every week
+    steps:
+      - weekly-status-update
+      - weekly-delivery-value
+      - stakeholder-scheduled-email
+      - mail-voice-dontbeweird
+      - send-autodevelop-mail
+    optional:
+      - weekly-delivery-value
+  ship:
+    description: Phrase-gated git and env deploys.
+    bucket: ship
+    gate_class: deploy
+    resume_from: commit-push-master
+    steps:
+      - commit-push-branch
+      - commit-push-master
+      - deploy-staging-local
+      - request-prod-approval
+      - promote-master-to-release
+      - commit-push-release
+      - deploy-production-local
+      - email-release-digest
+    optional:
+      - commit-push-branch
+      - commit-push-release
+      - email-release-digest
+  docs_and_demos:
+    description: Handbook, docs site, recorded media, and in-app feature demos.
+    bucket: docs
+    gate_class: none
+    resume_from: update-autodevelop-docs
+    steps:
+      - vitepress-docs
+      - record-docs-media
+      - update-autodevelop-docs
+      - feature-demo
+      - new-feature-demo
+    optional:
+      - record-docs-media
+      - feature-demo
+      - new-feature-demo
+  discovery:
+    description: Work out which skill applies before doing anything else.
+    bucket: search
+    gate_class: none
+    resume_from: identify-skills
+    steps:
+      - identify-skills
+      - find-skills
+      - keep-going
+    optional:
+      - find-skills
+      - keep-going
+  debug:
+    description: Reproduce, isolate, fix, and prove the fix on a bound ticket. Never ends in a deploy.
+    bucket: build
+    gate_class: none
+    resume_from: diagnosing-bugs
+    steps:
+      - identify-skills
+      - diagnosing-bugs
+      - systematic-debugging
+      - network-request-auditing
+      - keep-going
+      - ticket-progress
+    optional:
+      - network-request-auditing
+      - ticket-progress
+  testing:
+    description: Add or run verification for work that already exists. Never ends in a deploy.
+    bucket: build
+    gate_class: none
+    resume_from: webapp-testing
+    steps:
+      - identify-skills
+      - adding-e2e-tests
+      - webapp-testing
+      - form-testing
+      - api-smoke-testing
+      - verify-ticket
+    optional:
+      - adding-e2e-tests
+      - form-testing
+      - api-smoke-testing
+
+# Gate classes are read off the utterance, not off the bucket. Any match sets
+# ask. The router selects a playbook; it never satisfies a gate.
+gate_classes:
+  mail:
+    requires: confirm token plus a recipient on the instance mail allowlist
+    keywords:
+      - mail
+      - email
+      - send
+      - notify
+      - stakeholder
+      - digest
+      - blast
+  deploy:
+    requires: the exact confirm phrase typed in this chat
+    keywords:
+      - deploy
+      - ship
+      - release
+      - promote
+      - staging
+      - production
+      - prod
+      - push
+      - hotfix
+      - rollback
+  destructive:
+    requires: explicit confirmation naming what is removed
+    keywords:
+      - delete
+      - remove
+      - drop
+      - purge
+      - wipe
+      - force
+      - revert
+      - close
+
+router:
+  tie_margin: 2
+  max_skills_per_bucket: 6
+  fallback_bucket: search
+  never:
+    - invent a confirm token
+    - write mail
+    - invent a ticket number
+    - deploy
+    - read a SKILL.md body into the response
+
+# Remote MCP Tools. Eight, and only eight. See docs/internal/adr/mcp-skill-buckets.md.
+mcp_buckets:
+  board:
+    title: Board
+    tool: bucket_board
+    always_ask: false
+    gate_class: destructive
+    when:
+      - ticket
+      - tickets
+      - issue
+      - issues
+      - board
+      - kanban
+      - backlog
+      - claim
+      - triage
+      - acceptance
+      - milestone
+      - sprint
+      - assignee
+    may_invoke:
+      - create-ticket
+      - ingest-notes-to-project
+      - pull-project-work
+      - ticket-progress
+      - verify-ticket
+      - remove-tickets
+    loops:
+      - ticket_lifecycle
+    must_never:
+      - Send mail
+      - Deploy
+      - Open a second issue for the same request
+      - Create child issues
+  ui:
+    title: UI
+    tool: bucket_ui
+    always_ask: false
+    gate_class: none
+    when:
+      - ui
+      - layout
+      - styling
+      - component
+      - components
+      - react
+      - css
+      - tailwind
+      - mui
+      - frontend
+      - vue
+      - svelte
+      - angular
+      - solid
+      - next
+      - nuxt
+      - vite
+      - emotion
+      - styled
+      - transition
+      - animation
+      - responsive
+      - mobile
+      - accessibility
+      - screen
+      - modal
+      - button
+      - spreadsheet
+      - csv
+      - xlsx
+      - excel
+      - sheet
+    paths:
+      - web/
+      - app/
+      - .tsx
+      - .jsx
+      - .vue
+      - .svelte
+      - .html
+      - .css
+      - .scss
+      - .sass
+      - .less
+      - /components/
+      - /pages/
+      - /layouts/
+    may_invoke:
+      - implement-from-plan
+      - keep-going
+      - frontend-design
+      - web-design-guidelines
+      - react-best-practices
+      - mobile-ux-optimizer
+      - spreadsheet2page
+    loops: []
+    must_never:
+      - Expose third-party skill names as tools
+      - Mail
+      - Deploy
+  build:
+    title: Build
+    tool: bucket_build
+    always_ask: false
+    gate_class: none
+    when:
+      - api
+      - endpoint
+      - service
+      - backend
+      - server
+      - schema
+      - database
+      - migration
+      - model
+      - logic
+      - refactor
+      - implement
+      - bug
+      - broken
+      - failing
+      - error
+      - test
+      - tests
+      - worker
+      - queue
+      - domain
+    paths:
+      - services/
+      - functions/
+      - scripts/
+      - .sql
+      - /api/
+      - .test.
+      - .spec.
+      - tests/
+      - e2e/
+    may_invoke:
+      - implement-from-plan
+      - keep-going
+      - contribute-upstream
+      - identify-skills
+      - diagnosing-bugs
+      - systematic-debugging
+      - tdd
+    loops:
+      - debug
+      - testing
+    must_never:
+      - Mail
+      - Deploy
+      - Invent a ticket number
+  message:
+    title: Message
+    tool: bucket_message
+    always_ask: true
+    gate_class: mail
+    when:
+      - mail
+      - email
+      - stakeholder
+      - notify
+      - digest
+      - recap
+      - weekly
+      - client
+      - report
+      - summary
+    may_invoke:
+      - send-autodevelop-mail
+      - stakeholder-scheduled-email
+      - share-stakeholder-update
+      - ask-stakeholder
+      - start-work-update
+      - email-release-digest
+      - mail-voice-dontbeweird
+      - weekly-status-update
+      - weekly-delivery-value
+      - pdf
+      - pptx
+    loops:
+      - weekly_reporting
+    must_never:
+      - Write or send mail without the confirm token and allowlist
+      - Invent a token
+  ship:
+    title: Ship
+    tool: bucket_ship
+    always_ask: true
+    gate_class: deploy
+    when:
+      - commit
+      - push
+      - branch
+      - merge
+      - preview
+      - deploy
+      - staging
+      - production
+      - promote
+      - release
+      - hotfix
+      - rollback
+      - tag
+    branch_roles:
+      - staging
+      - production
+    paths:
+      - changelog.md
+      - appversion.ts
+    may_invoke:
+      - commit-push-branch
+      - commit-push-master
+      - commit-push-release
+      - deploy-pr-preview
+      - deploy-staging-local
+      - deploy-production-local
+      - promote-master-to-release
+      - request-prod-approval
+      - ask-adam
+    loops:
+      - ship
+    must_never:
+      - Push the staging or production branch without the exact phrase in chat
+      - Deploy without the exact phrase in chat
+  docs:
+    title: Docs
+    tool: bucket_docs
+    always_ask: false
+    gate_class: none
+    when:
+      - docs
+      - documentation
+      - handbook
+      - vitepress
+      - readme
+      - guide
+      - changelog
+      - demo
+      - screenshot
+      - video
+      - walkthrough
+    paths:
+      - docs/
+      - autodevelop-docs/
+    may_invoke:
+      - vitepress-docs
+      - update-autodevelop-docs
+      - record-docs-media
+      - feature-demo
+      - new-feature-demo
+    loops:
+      - docs_and_demos
+    must_never:
+      - Instance bindings or secrets in the handbook
+      - GitHub Actions in this plugin repo
+  search:
+    title: Search
+    tool: bucket_search
+    always_ask: false
+    gate_class: none
+    when:
+      - which
+      - find
+      - search
+      - skill
+      - skills
+      - research
+      - investigate
+      - explore
+      - discover
+      - inventory
+      - compare
+    may_invoke:
+      - identify-skills
+      - find-skills
+      - web-search-intense
+      - research
+    loops:
+      - discovery
+    must_never:
+      - Use find-skills as the router
+      - Recurse identify-skills into itself
+  secure:
+    title: Secure
+    tool: bucket_secure
+    always_ask: false
+    gate_class: destructive
+    when:
+      - secret
+      - secrets
+      - token
+      - credential
+      - env
+      - vulnerability
+      - security
+      - cve
+      - dependabot
+      - leak
+      - permission
+      - audit
+    paths:
+      - .env
+      - firestore.rules
+      - storage.rules
+      - /secrets/
+      - .pem
+    may_invoke:
+      - keep-secrets-local
+      - add-msm-secrets
+      - commit-risk-audit
+      - auditing-security
+      - dependabot-triage
+    loops: []
+    must_never:
+      - Print secret values
+      - Peek env files into chat
+
+# Local slash commands. Thin shims over the buckets above. Not skills.
+wrappers:
+  ui:
+    slash: /ui
+    bucket: ui
+    command: .cursor/commands/ui.md
+    hint: layout, components, React, mobile chrome
+  backend:
+    slash: /backend
+    bucket: build
+    command: .cursor/commands/backend.md
+    hint: API, services, non-UI product work
+  business-logic:
+    slash: /business-logic
+    bucket: build
+    command: .cursor/commands/business-logic.md
+    hint: domain rules, schema, validation
+  debug:
+    slash: /debug
+    bucket: build
+    loop: debug
+    command: .cursor/commands/debug.md
+    hint: reproduce and isolate a defect
+  testing:
+    slash: /testing
+    bucket: build
+    loop: testing
+    command: .cursor/commands/testing.md
+    hint: verification for work that already exists
+  new-feature:
+    slash: /new-feature
+    bucket: board
+    loop: ticket_lifecycle
+    command: .cursor/commands/new-feature.md
+    hint: notes to ticket to implementation to verification
+  communication:
+    slash: /communication
+    bucket: message
+    loop: weekly_reporting
+    command: .cursor/commands/communication.md
+    hint: stakeholder mail, weekly recap, digest
+  release:
+    slash: /release
+    bucket: ship
+    loop: ship
+    command: .cursor/commands/release.md
+    hint: commit, preview, staging, promote, production
+  devops:
+    slash: /devops
+    bucket: ship
+    loop: ship
+    command: .cursor/commands/devops.md
+    hint: this org’s environments, promote, domains
+
+categories:
+  - { id: bootstrap, title: First-day bind }
+  - { id: discovery, title: Which skill to load }
+  - { id: board, title: Tickets and GitHub Projects }
+  - { id: ingest, title: Notes and URLs to tickets }
+  - { id: implement, title: Do the work once a ticket exists }
+  - { id: ui, title: Pages from attached data }
+  - { id: git, title: Branches, commits, worktrees }
+  - { id: ship, title: Staging and production gates }
+  - { id: mail, title: Confirmed stakeholder email }
+  - { id: weekly, title: Weekly recap and value }
+  - { id: docs, title: Handbook and client docs site }
+  - { id: demos, title: In-app feature demos }
+  - { id: cybersecurity, title: Secrets and commit risk }
+  - { id: search, title: Research }
+  - { id: operator, title: Hosted operator playbooks }
+  - { id: client, title: Client-only (do not import) }
+
+skills:
+  - { name: bootstrap, tree: autodevelop, category: bootstrap, status: in-kit, invoke: automatic,
+      related: [onboard-client, create-ticket], when: Create or bind the GitHub Project, write field ids, invite people }
+  - { name: onboard-client, tree: autodevelop, category: bootstrap, status: in-kit, invoke: manual,
+      related: [bootstrap, contribute-upstream, identify-skills], when: New client or convert a repo to plugin + client trees }
+  - { name: identify-skills, tree: autodevelop, category: discovery, status: in-kit, invoke: automatic,
+      related: [keep-going, find-skills, implement-from-plan], when: Inventory local SKILL.md and Read matches. Not skills.sh. }
+  - { name: find-skills, tree: third-party, category: discovery, status: in-kit, invoke: manual,
+      related: [identify-skills], when: Search/install from skills.sh (npx skills) }
+  - { name: keep-going, tree: autodevelop, category: discovery, status: in-kit, invoke: manual,
+      depends_on: [identify-skills], related: [implement-from-plan, ticket-progress],
+      when: Loop on a named ticket until acceptance checks exist }
+  - { name: ingest-notes-to-project, tree: autodevelop, category: ingest, status: in-kit, invoke: automatic,
+      aliases: [gemini-notes-to-project], related: [create-ticket, pull-project-work],
+      when: Notes or a readable URL to numbered preview to issues }
+  - { name: create-ticket, tree: autodevelop, category: board, status: in-kit, invoke: automatic,
+      depends_on: [bootstrap], related: [ingest-notes-to-project, ask-stakeholder, ticket-progress, start-work-update],
+      when: Chat or ticket-required hook to preview to issue; bind session }
+  - { name: pull-project-work, tree: autodevelop, category: board, status: in-kit, invoke: automatic,
+      related: [create-ticket, ticket-progress, implement-from-plan], when: Claim a high-priority or topical board item }
+  - { name: remove-tickets, tree: autodevelop, category: board, status: in-kit, invoke: manual,
+      related: [create-ticket, pull-project-work], when: Close or drop board items that should not stay open }
+  - { name: ticket-progress, tree: autodevelop, category: board, status: in-kit, invoke: manual,
+      related: [create-ticket, verify-ticket, start-work-update], when: Progress comment on the bound ticket }
+  - { name: start-work-update, tree: autodevelop, category: mail, status: in-kit, invoke: manual,
+      source: OTW worktree feat/admin-portal-ux-redesign,
+      depends_on: [create-ticket, create-branch],
+      related: [ticket-progress, stakeholder-scheduled-email, mail-voice-dontbeweird],
+      when: Short work-started plus branch mail and ticket comment }
+  - { name: ask-stakeholder, tree: autodevelop, category: mail, status: in-kit, invoke: manual,
+      related: [create-ticket, share-stakeholder-update, mail-voice-dontbeweird],
+      when: Clarify; optional confirmed mail; set Blocked }
+  - { name: share-stakeholder-update, tree: autodevelop, category: mail, status: in-kit, invoke: manual,
+      related: [verify-ticket, ask-stakeholder, stakeholder-scheduled-email, pdf, pptx],
+      when: PDF / PPT / video plus confirmed ready-to-check mail }
+  - { name: verify-ticket, tree: autodevelop, category: board, status: in-kit, invoke: manual,
+      related: [ticket-progress, share-stakeholder-update, deploy-pr-preview],
+      when: Acceptance criteria plus screenshots before In review }
+  - { name: implement-from-plan, tree: autodevelop, category: implement, status: in-kit, invoke: manual,
+      related: [keep-going, identify-skills, create-ticket], when: Execute a Built plan }
+  - { name: context-ingest, tree: autodevelop, category: implement, status: in-kit, invoke: automatic,
+      related: [send-feedback, ticket-progress], when: POST a session recap to the organization store }
+  - { name: contribute-upstream, tree: autodevelop, category: implement, status: in-kit, invoke: automatic,
+      related: [onboard-client], when: Push a generally useful client rule into autodevelop/ }
+  - { name: create-branch, tree: autodevelop, category: git, status: in-kit, invoke: manual,
+      related: [checkout-worktree, commit-push-branch, start-work-update], when: Conventional-Commits branch off the instance staging branch }
+  - { name: checkout-worktree, tree: autodevelop, category: git, status: in-kit, invoke: manual,
+      related: [create-branch, rogue-worktree-cleanup], when: Isolated git worktree for a ticket }
+  - { name: rogue-worktree-cleanup, tree: autodevelop, category: git, status: in-kit, invoke: manual,
+      related: [checkout-worktree], when: Remove leftover unclaimed worktrees }
+  - { name: commit-push-branch, tree: autodevelop, category: git, status: in-kit, invoke: automatic,
+      related: [commit-push-master, creating-pr], when: Commit and push a feature branch (never staging/production) }
+  - { name: commit-push-master, tree: autodevelop, category: ship, status: in-kit, invoke: automatic,
+      gates: [YES PUSH TO MASTER], related: [deploy-staging-local, promote-master-to-release] }
+  - { name: deploy-pr-preview, tree: autodevelop, category: ship, status: in-kit, invoke: manual,
+      related: [verify-ticket, commit-push-branch] }
+  - { name: deploy-staging-local, tree: autodevelop, category: ship, status: in-kit, invoke: manual,
+      gates: [DEPLOYED TO STAGING], related: [commit-push-master] }
+  - { name: ask-adam, tree: autodevelop, category: ship, status: in-kit, invoke: manual,
+      related: [promote-master-to-release, request-prod-approval] }
+  - { name: request-prod-approval, tree: autodevelop, category: ship, status: in-kit, invoke: manual,
+      related: [ask-adam, promote-master-to-release, stakeholder-scheduled-email] }
+  - { name: promote-master-to-release, tree: autodevelop, category: ship, status: in-kit, invoke: automatic,
+      gates: [YES PUSH TO RELEASE], related: [commit-push-master, deploy-production-local] }
+  - { name: commit-push-release, tree: autodevelop, category: ship, status: in-kit, invoke: automatic,
+      gates: [YES PUSH TO RELEASE], when: Hotfix only on release }
+  - { name: deploy-production-local, tree: autodevelop, category: ship, status: in-kit, invoke: manual,
+      gates: [DEPLOYED TO PRODUCTION], related: [promote-master-to-release, email-release-digest] }
+  - { name: provision-production-release, tree: autodevelop, category: ship, status: in-kit, invoke: manual,
+      related: [deploy-production-local, new-gh-repo] }
+  - { name: new-gh-repo, tree: autodevelop, category: bootstrap, status: in-kit, invoke: manual,
+      related: [bootstrap, onboard-client] }
+  - { name: email-release-digest, tree: autodevelop, category: mail, status: in-kit, invoke: manual,
+      related: [stakeholder-scheduled-email, weekly-status-update, mail-voice-dontbeweird] }
+  - { name: send-autodevelop-mail, tree: autodevelop, category: mail, status: in-kit, invoke: automatic,
+      depends_on: [mail-voice-dontbeweird],
+      related: [stakeholder-scheduled-email, start-work-update, share-stakeholder-update, email-release-digest],
+      when: Confirmed send through Autodevelop POST /cli/mail. Not Firestore mail. }
+  - { name: stakeholder-scheduled-email, tree: autodevelop, category: mail, status: in-kit, invoke: manual,
+      depends_on: [mail-voice-dontbeweird, send-autodevelop-mail],
+      related: [weekly-status-update, email-release-digest, share-stakeholder-update],
+      when: Meeting recap, weekly PDF, or digest after approval,
+      affordability: required }
+  - { name: mail-voice-dontbeweird, tree: autodevelop, category: mail, status: in-kit, invoke: automatic,
+      related: [stakeholder-scheduled-email, ask-stakeholder, share-stakeholder-update, start-work-update] }
+  - { name: weekly-status-update, tree: autodevelop, category: weekly, status: in-kit, invoke: manual,
+      related: [weekly-delivery-value, stakeholder-scheduled-email],
+      when: Hosted Jobs panel. Worker report and email. Not a chat deck., affordability: required }
+  - { name: weekly-delivery-value, tree: autodevelop, category: weekly, status: in-kit, invoke: manual,
+      related: [weekly-status-update], when: Hosted Jobs panel. Worker writes 0–100 snapshots. }
+  - { name: vitepress-docs, tree: autodevelop, category: docs, status: in-kit, invoke: automatic,
+      related: [record-docs-media, update-autodevelop-docs],
+      configs: [docs-inventory.yaml, business/videos/*.yaml],
+      note: Mechanism shared; hostname folder is client IP }
+  - { name: record-docs-media, tree: autodevelop, category: docs, status: in-kit, invoke: manual,
+      related: [vitepress-docs, feature-demo] }
+  - { name: update-autodevelop-docs, tree: autodevelop, category: docs, status: in-kit, invoke: automatic,
+      related: [vitepress-docs, identify-skills] }
+  - { name: feature-demo, tree: autodevelop, category: demos, status: in-kit, invoke: manual,
+      related: [new-feature-demo, record-docs-media],
+      configs: [process/feature-demo/demo-flags.yaml] }
+  - { name: new-feature-demo, tree: autodevelop, category: demos, status: in-kit, invoke: manual,
+      related: [feature-demo], configs: [process/feature-demo/demo-flags.yaml] }
+  - { name: commit-risk-audit, tree: autodevelop, category: cybersecurity, status: in-kit, invoke: manual,
+      related: [keep-secrets-local, auditing-security] }
+  - { name: keep-secrets-local, tree: autodevelop, category: cybersecurity, status: in-kit, invoke: manual,
+      related: [add-msm-secrets, commit-risk-audit] }
+  - { name: add-msm-secrets, tree: autodevelop, category: cybersecurity, status: in-kit, invoke: manual,
+      related: [keep-secrets-local] }
+  - { name: web-search-intense, tree: autodevelop, category: search, status: in-kit, invoke: manual,
+      related: [research] }
+  - { name: stg-mock-data-generator, tree: autodevelop, category: implement, status: in-kit, invoke: manual,
+      note: OTW also has a client copy. Share only if schema-free. }
+  - { name: send-feedback, tree: autodevelop, category: implement, status: in-kit, invoke: automatic,
+      related: [context-ingest] }
+  - { name: stakeholder-mail-voice, tree: autodevelop, category: mail, status: in-kit, invoke: automatic,
+      related: [mail-voice-dontbeweird] }
+  - { name: add-subscriber, tree: autodevelop, category: operator, status: in-kit, invoke: manual,
+      when: Operator issues a subscription token }
+  - { name: spreadsheet2page, tree: autodevelop, category: ui, status: in-kit, invoke: manual,
+      related: [frontend-design, implement-from-plan, react-best-practices],
+      when: "/ui/spreadsheet2page with one or more attached spreadsheets and a stated page goal" }
+
+runtime:
+  configs:
+    - { name: skill-invoke.yaml, path: .cursor/skills/autodevelop-internal/skill-invoke.yaml, status: in-kit }
+    - { name: hookignore.example.yaml, path: .cursor/hooks/hookignore.example.yaml, status: in-kit }
+    - { name: demo-flags.yaml, path: .cursor/skills/autodevelop-internal/process/feature-demo/demo-flags.yaml, status: in-kit }
+    - { name: skill-catalog.yaml, path: .cursor/skills/autodevelop-internal/skill-catalog.yaml, status: in-kit }
+  hooks:
+    [ticket-required, ticket-progress-files, ticket-session, guard-shell, guard-stakeholder-mail,
+     gate-prompt, nudge-edits, pr-link-hint, ready-for-feedback, session-context, session-end-nudge,
+     plan-completion-check, worktree-status, worktree-info]
+  mcp: [kit_doctor, kit_config, kit_session, kit_people, kit_git, bucket_board, bucket_ui, bucket_build, bucket_message, bucket_ship, bucket_docs, bucket_search, bucket_secure]
+  hosted_skills: services/host/skills
+  workspace_bind: .autodevelop
+
+client_skills:
+  - { name: provider-auth-shell, tree: client, status: client, instance: optic-truck-works }
+  - { name: vitepress-docs, tree: client, status: client, instance: optic-truck-works,
+      note: Binding plus hostname content }
+  - { name: stg-mock-data-generator, tree: client, status: client, instance: optic-truck-works,
+      note: Client schema copy }
+
+third_party:
+  process:
+    relate_to: [identify-skills, implement-from-plan, create-ticket, wayfinder]
+    names: [wayfinder, wizard, implement, research, code-review, reviewing-code, creating-pr,
+            resolving-merge-conflicts, grill-with-docs, to-spec, to-tickets, triage,
+            setup-matt-pocock-skills, suggesting-skills]
+  design:
+    relate_to: [implement-from-plan, vitepress-docs]
+    names: [codebase-design, domain-modeling, improve-codebase-architecture,
+            architecture-decision-records, database-design]
+  frontend:
+    relate_to: [feature-demo, record-docs-media, implement-from-plan]
+    names: [frontend-architect, frontend-design, web-design-guidelines, web-design-expert,
+            react-best-practices, mobile-ux-optimizer, ui-ux-pro-max, gsap-core, capacitor-best-practices]
+  testing:
+    relate_to: [verify-ticket, deploy-pr-preview]
+    names: [adding-e2e-tests, api-smoke-testing, webapp-testing, form-testing, recording-browser-flow-as-test]
+  debugging:
+    relate_to: [keep-going, implement-from-plan]
+    names: [diagnosing-bugs, systematic-debugging, auditing-performance, network-request-auditing]
+  documents:
+    relate_to: [share-stakeholder-update, weekly-status-update, vitepress-docs]
+    names: [pdf, pptx, seo-analysis, seo-auditing, fixing-broken-links]
+  code_generation:
+    relate_to: [implement-from-plan, feature-demo]
+    names: [prototype, tdd, adding-feature-flags, adding-api-docs, setting-up-ci]
+  cybersecurity:
+    relate_to: [commit-risk-audit, keep-secrets-local]
+    names: [auditing-security, dependabot-triage]
+  engineering:
+    status: in-kit
+    source: OTW chore/shared-packages-spec
+    relate_to: [contribute-upstream]

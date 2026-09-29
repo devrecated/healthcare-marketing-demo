@@ -1,0 +1,9 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Other consumers copy the kit example into their <instance>/autodevelop/.policies/ folder.
+stdioReadOnly: true
+remoteRequiresToken: true
+lapseString: Your billing has expired
+remoteMustNotWriteMail: true
+remoteMustNotCreateIssues: true
+remoteMustNotDeploy: true
+# Stdio tools stay on-machine. Remote tools need the subscription token.

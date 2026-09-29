@@ -1,0 +1,98 @@
+{
+  "copyright": "Copyright (c) 2026 Devrecated.",
+  "description": "Optional overlay. Industry rules always run. Repo .mdc rules tighten names, skips, and public paths — they do not invent extra detectors.",
+  "ruleSources": [
+    ".cursor/rules/autodevelop/cybersecurity/appsec-baseline.mdc",
+    ".cursor/rules/autodevelop/cybersecurity/secure-bucket.mdc",
+    ".cursor/rules/autodevelop/frontend/ui-bucket.mdc",
+    ".cursor/rules/autodevelop/process/build-bucket.mdc",
+    ".cursor/rules/autodevelop/testing/testing-bucket.mdc",
+    ".cursor/rules/autodevelop/documents/docs-bucket.mdc",
+    ".cursor/rules/autodevelop/process/ship-files-bucket.mdc"
+  ],
+  "modelsPackage": "@app/models",
+  "modelsPaths": ["packages/models", "packages/models/converters"],
+  "firebase": {
+    "staging": "example-stg",
+    "production": "example-production"
+  },
+  "rulesFiles": [
+    { "environment": "staging", "rules_type": "firestore", "rel": "firebase/example-stg/firestore.rules" },
+    { "environment": "production", "rules_type": "firestore", "rel": "firebase/example-production/firestore.rules" },
+    { "environment": "staging", "rules_type": "storage", "rel": "firebase/example-stg/storage.rules" },
+    { "environment": "production", "rules_type": "storage", "rel": "firebase/example-production/storage.rules" }
+  ],
+  "appRoots": ["web/app", "src/views", "src/hooks", "frontend"],
+  "apiRoots": ["services/api", "backend"],
+  "functionsRoots": ["services/functions", "functions"],
+  "entryFiles": ["src/index.ts", "src/app.ts", "index.ts"],
+  "authMiddleware": [
+    "verifyToken",
+    "verifyAdminToken",
+    "adminAuthMiddleware",
+    "baseAuthMiddleware",
+    "clientAuthMiddleware",
+    "bankAgentAuthMiddleware",
+    "transporterAuthMiddleware",
+    "repairAuthMiddleware",
+    "guestAuthMiddleware",
+    "createAuthMiddleware",
+    "requireAuth",
+    "authenticate",
+    "isAuthenticated",
+    "authMiddleware",
+    "checkAuth",
+    "ensureAuth",
+    "requireRole",
+    "requireAdmin",
+    "requireUser",
+    "ensureAuthenticated",
+    "firebaseAuth",
+    "validateToken",
+    "protect",
+    "authorize"
+  ],
+  "publicRouteHints": [
+    "/public/",
+    "/health",
+    "/ready",
+    "/webhook",
+    "/webhooks",
+    "/login",
+    "/sign-in",
+    "/signin",
+    "/before-sign-in",
+    "/generate-password-reset",
+    "/resend-verification"
+  ],
+  "sanitizers": ["DOMPurify", "sanitize"],
+  "validators": [
+    "zod",
+    "celebrate",
+    "joi",
+    "checkSchema",
+    "express-validator",
+    "validationResult",
+    "safeParse",
+    "matchedData"
+  ],
+  "knownAuthClients": [
+    "web/app/src/core/auth",
+    "web/app/src/contexts/AuthContext",
+    "web/app/src/core/firebase",
+    "frontend/"
+  ],
+  "skipConsolePaths": [
+    "createAuthMiddleware",
+    "socketAuthMiddleware"
+  ],
+  "webhookVerify": [
+    "constructEvent",
+    "verifyWebhook",
+    "timingSafeEqual",
+    "x-webhook",
+    "signature"
+  ],
+  "axiosClientPaths": ["web/app/src/core/api/axiosClient.ts"],
+  "queryHookRoots": ["web/app/src/hooks"]
+}

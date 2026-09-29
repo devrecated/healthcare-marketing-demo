@@ -1,0 +1,118 @@
+# How Autodevelop skills may start. Edit invoke: manual | automatic.
+# manual = user names the skill or /slash in this chat.
+# automatic = agent may start it when the task matches.
+# Missing name → that skill’s disable-model-invocation frontmatter.
+# Invocation log (gitignored): .cursor/local/skill-invoke-log.yaml
+#   node .cursor/skills/autodevelop-internal/skill-invoke.mjs record <name> <manual|automatic>
+#
+# Copyright (c) 2026 Devrecated.
+
+version: 1
+default: automatic
+skills:
+  add-msm-secrets:
+    invoke: manual
+  brain-add-skill:
+    invoke: manual
+  bootstrap:
+    invoke: automatic
+  brain-link-skill:
+    invoke: manual
+  find-skills:
+    invoke: manual
+  ingest-notes-to-project:
+    invoke: automatic
+  onboard-client:
+    invoke: manual
+  start-work-update:
+    invoke: manual
+  stakeholder-mail-voice:
+    invoke: automatic
+  ask-adam:
+    invoke: manual
+  ask-stakeholder:
+    invoke: manual
+  checkout-worktree:
+    invoke: manual
+  commit-push-branch:
+    invoke: automatic
+  commit-push-master:
+    invoke: automatic
+  commit-push-release:
+    invoke: automatic
+  commit-risk-audit:
+    invoke: manual
+  contribute-upstream:
+    invoke: automatic
+  context-ingest:
+    invoke: automatic
+  create-branch:
+    invoke: manual
+  create-ticket:
+    invoke: automatic
+  deploy-pr-preview:
+    invoke: manual
+  deploy-production-local:
+    invoke: manual
+  deploy-staging-local:
+    invoke: manual
+  email-release-digest:
+    invoke: manual
+  feature-demo:
+    invoke: manual
+  gemini-notes-to-project:
+    invoke: automatic
+  identify-skills:
+    invoke: automatic
+  implement-from-plan:
+    invoke: manual
+  keep-going:
+    invoke: manual
+  keep-secrets-local:
+    invoke: manual
+  new-feature-demo:
+    invoke: manual
+  new-gh-repo:
+    invoke: manual
+  promote-master-to-release:
+    invoke: automatic
+  provision-production-release:
+    invoke: manual
+  pull-project-work:
+    invoke: automatic
+  record-docs-media:
+    invoke: manual
+  remove-tickets:
+    invoke: manual
+  request-prod-approval:
+    invoke: manual
+  rogue-worktree-cleanup:
+    invoke: manual
+  send-feedback:
+    invoke: manual
+  send-autodevelop-mail:
+    invoke: automatic
+  share-stakeholder-update:
+    invoke: manual
+  spreadsheet2page:
+    invoke: manual
+  mail-voice-dontbeweird:
+    invoke: automatic
+  stakeholder-scheduled-email:
+    invoke: manual
+  stg-mock-data-generator:
+    invoke: manual
+  ticket-progress:
+    invoke: manual
+  update-autodevelop-docs:
+    invoke: automatic
+  verify-ticket:
+    invoke: manual
+  vitepress-docs:
+    invoke: automatic
+  web-search-intense:
+    invoke: manual
+  weekly-delivery-value:
+    invoke: manual
+  weekly-status-update:
+    invoke: manual

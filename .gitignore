@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Next.js / build output
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Env & secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Cursor local (machine-specific state, not shared)
+.cursor/local/
+
+# Third-party reference clones (large; tracked upstream, not vendored here).
+# See examples/catalog.yaml for what they are and where to fetch them.
+examples/*
+!examples/catalog.yaml

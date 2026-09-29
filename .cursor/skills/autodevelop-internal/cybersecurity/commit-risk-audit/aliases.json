@@ -1,0 +1,9 @@
+{
+  "copyright": "Copyright (c) 2026 Devrecated.",
+  "description": "Editable identity map for the commit-risk-audit skill. Add an entry per author you want to merge or recognize. This file ships empty; populate it for your organization.",
+  "users": [],
+  "bots": {
+    "emails": ["bot@example.com"],
+    "name_patterns": ["\\[bot\\]", "^dependabot"]
+  }
+}

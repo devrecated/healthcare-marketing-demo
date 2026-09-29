@@ -1,0 +1,15 @@
+---
+description: Product work needs one board ticket. Bind or ensure it; never invent a number.
+alwaysApply: true
+---
+
+# Ticket required
+
+Copyright (c) 2026 Devrecated.
+
+Product work needs **one** bound board ticket. Kit trees under `.cursor/` and `docs/internal` are exempt.
+
+1. If this chat already named a ticket, or last turn was the same effort, search and **bind that issue**. Do not open a second issue. Do not open child issues. Do not invent a number.
+2. If none exists, call hosted MCP **`issues_ensure`**. It files one GitHub issue on the org project board (default `board.provider: github`). Jira, Asana, Linear, and Trello are later adapters — do not pretend they are connected.
+3. Write `.cursor/local/gh-projects/session.json` with the returned issue number, then **continue implementing**.
+4. Do not stop with “there is no ticket bound” after `issues_ensure` has returned a number.

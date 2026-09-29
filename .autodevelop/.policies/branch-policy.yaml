@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Other consumers copy the kit example into their <instance>/autodevelop/.policies/ folder.
+# This repository is single-branch: shared work lands on master. There is no production branch named release.
+# /commit-push-release and /promote-master-to-release must refuse. Use /commit-push-master. Do not fetch origin/release.
+# Confirm phrases stay YES PUSH TO MASTER / YES PUSH TO RELEASE even if you rename the branches.
+# Legacy path (one release): .cursor/skills/<instance>/autodevelop/branches.yaml
+staging: master
+production: master
+singleBranch: true
+askStaging: false
+askProduction: false
+# Optional alias for the ask flags:
+# protected:
+#   - staging
+#   - production
+# When a flag is true, that branch is read-only until this chat contains the phrase.
+# When a flag is false, agents may commit and push that branch without the phrase.
+# Force-push remains forbidden.
+# YES PUSH TO RELEASE applies only when a distinct production branch exists and askProduction is true.

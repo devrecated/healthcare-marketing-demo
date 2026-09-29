@@ -1,0 +1,30 @@
+---
+description: Never write chat-only secrets or asides into repo files
+alwaysApply: true
+---
+
+# Chat stays in chat
+
+Copyright (c) 2026 Devrecated.
+
+Never copy a chat instruction, aside, or “keep this quiet” note into a repo file.
+
+That includes LICENSE, NOTICE, README, legal/IP docs, employee guides, Project readmes, mail HTML, commits, and comments.
+
+Chat-only (do **not** write these into files):
+
+- “Do not email this file”
+- “Don’t tell the client / stakeholders”
+- “Keep this secret / between us”
+- “This would be embarrassing if they saw it”
+- Process asides meant only for the agent in this thread
+
+```md
+<!-- BAD — chat aside leaked into LICENSE.md -->
+**Do not email this file.** Stakeholder mail must never mention copyright.
+
+<!-- GOOD — LICENSE states ownership only -->
+This repository contains two ownership classes.
+```
+
+Agent process belongs in `.cursor/rules/` or a skill, not in LICENSE or client-facing docs. If the user said something is secret or not to be included, leave it out of the tree. When unsure, ask — do not paste it “just in case.”

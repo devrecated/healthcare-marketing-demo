@@ -1,0 +1,13 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Other consumers copy the kit example into their <instance>/autodevelop/.policies/ folder.
+# Recipients live in instance config.json — this file does not list addresses.
+confirmRequired: true
+allowlistSource: config.json
+allowlistPath: mail.allowlist
+overridePhraseSource: config.json
+overridePhrasePath: mail.allowOverridePhrase
+# Phrase name only. The live value is mail.allowOverridePhrase in config.json.
+overridePhraseName: send anyway
+hooksNeverSend: true
+neverInventConfirmToken: true
+logBodies: false
