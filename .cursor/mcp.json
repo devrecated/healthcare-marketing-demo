@@ -1,10 +1,10 @@
 {
   "mcpServers": {
     "autodevelop": {
+      "command": "node",
       "args": [
-        "kit-mcp"
-      ],
-      "command": "autodevelop"
+        ".cursor/skills/autodevelop-internal/mcp/server.mjs"
+      ]
     },
     "autodevelop-host": {
       "url": "https://brain.devrecated.com/mcp"
