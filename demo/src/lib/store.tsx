@@ -23,6 +23,7 @@ import type {
   ReconciliationSession,
   Supply,
   SurgeryCase,
+  UsageLogEntry,
   VarianceReason,
 } from "@/lib/types"
 import { canSignOff, dayStamp, dueSupplies, entryResolved } from "@/lib/reconciliation"
@@ -56,6 +57,7 @@ type Action =
       witness?: string
     }
   | { type: "sign-reconciliation"; sessionId: string }
+  | { type: "record-device-usage"; entries: UsageLogEntry[] }
 
 function mapSurgery(
   state: AppState,
@@ -241,6 +243,22 @@ function reducer(state: AppState, action: Action): AppState {
         ),
       }
     }
+    case "record-device-usage": {
+      if (action.entries.length === 0) return state
+      const decrements = new Map<string, number>()
+      for (const entry of action.entries) {
+        decrements.set(entry.supplyId, (decrements.get(entry.supplyId) ?? 0) + entry.qty)
+      }
+      return {
+        ...state,
+        supplies: state.supplies.map((supply) =>
+          decrements.has(supply.id)
+            ? { ...supply, quantity: Math.max(0, supply.quantity - (decrements.get(supply.id) ?? 0)) }
+            : supply,
+        ),
+        usageLog: [...action.entries, ...state.usageLog],
+      }
+    }
     default:
       return state
   }
@@ -292,6 +310,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             state: {
               ...parsed,
               reconciliations: parsed.reconciliations ?? [],
+              usageLog: parsed.usageLog ?? [],
             },
           })
         }
