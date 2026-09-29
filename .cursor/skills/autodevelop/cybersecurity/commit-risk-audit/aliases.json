@@ -1,0 +1,101 @@
+{
+  "copyright": "Copyright (c) 2026 Devrecated.",
+  "users": [
+    {
+      "canonical_name": "Jack Benedickson",
+      "github_login": "jpb0042",
+      "emails": [
+        "jpb0042@mix.wvu.edu",
+        "112137697+jpb0042@users.noreply.github.com",
+        "jack@pop-os.localdomain"
+      ],
+      "names": ["Jack", "Jack Benedickson"]
+    },
+    {
+      "canonical_name": "Nick Hendriks",
+      "github_login": "n-hendriks",
+      "emails": [
+        "nhendriks2@gmail.com",
+        "45179477+n-hendriks@users.noreply.github.com"
+      ],
+      "names": ["n-hendriks", "Nick"]
+    },
+    {
+      "canonical_name": "Adam Siwiec",
+      "github_login": "adamsiwiec1",
+      "emails": [
+        "adam@devrecated.co",
+        "73085927+adamsiwiec1@users.noreply.github.com"
+      ],
+      "names": ["Adam Siwiec"]
+    },
+    {
+      "canonical_name": "Chase",
+      "github_login": "chaseleto",
+      "emails": [
+        "cal20518@gmail.com",
+        "chase@pop-os.localdomain",
+        "chase@devrecated.co",
+        "the.primeagen@gmail.com",
+        "test@chase.com"
+      ],
+      "names": ["Chase", "chaseleto", "chase"]
+    },
+    {
+      "canonical_name": "Anthony Segarra",
+      "github_login": "Antsega",
+      "emails": [
+        "astrowelding@gmail.com",
+        "94858432+Antsega@users.noreply.github.com",
+        "astrowelding"
+      ],
+      "names": ["Antsega", "Ant_sega", "Anthony Segarra"]
+    },
+    {
+      "canonical_name": "Granddevv",
+      "github_login": "Granddevv",
+      "emails": [
+        "spacingflight@outlook.com",
+        "31965726+Granddevv@users.noreply.github.com"
+      ],
+      "names": ["granddevv", "Granddevv"]
+    },
+    {
+      "canonical_name": "Jacob Zorniak",
+      "github_login": "zorniajg",
+      "emails": [
+        "38439837+zorniajg@users.noreply.github.com",
+        "zorniajg@dukes.jmu.edu"
+      ],
+      "names": ["Jacob Zorniak", "zorniajg"]
+    },
+    {
+      "canonical_name": "Usman Mirza",
+      "github_login": "TheUsmanMirza",
+      "emails": [
+        "usmanbashir.mirza@gmail.com",
+        "48524353+TheUsmanMirza@users.noreply.github.com"
+      ],
+      "names": ["TheUsmanMirza", "Muhammd Usman Bashir"]
+    },
+    {
+      "canonical_name": "Jonathan Hofmann",
+      "github_login": "hofmannj0n",
+      "emails": ["122258749+hofmannj0n@users.noreply.github.com"],
+      "names": ["Jonathan Hofmann"]
+    },
+    {
+      "canonical_name": "Seth Stitik",
+      "github_login": "seth-stitik",
+      "emails": ["sstitik@gmail.com"],
+      "names": ["seth-stitik"]
+    }
+  ],
+  "bots": {
+    "emails": [
+      "219777880+devrecated-code[bot]@users.noreply.github.com",
+      "codebot@devrecated.co"
+    ],
+    "name_patterns": ["\\[bot\\]", "^CodeBot$", "^dependabot"]
+  }
+}

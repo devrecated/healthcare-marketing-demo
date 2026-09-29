@@ -1,0 +1,34 @@
+# Copyright (c) 2026 Devrecated
+# Copy to hookignore.yaml (gitignored) to turn hooks off.
+# Missing keys stay on. Names match the script basename without .mjs.
+#
+#   cp .cursor/hooks/hookignore.example.yaml .cursor/hooks/hookignore.yaml
+#
+# Then either:
+#   ignore:
+#     - ticket-progress-files
+# or:
+#   hooks:
+#     ticket-progress-files: false
+
+version: 1
+ignore: []
+hooks:
+  worktree-status: true
+  ticket-progress-files: true
+  ticket-session: true
+  ticket-required: true
+  session-end-nudge: true
+  log-session-outcome: true
+  session-context: true
+  ready-for-feedback: true
+  pr-link-hint: true
+  nudge-edits: true
+  guard-shell: true
+  guard-stakeholder-mail: true
+  gate-prompt: true
+  ticket-progress-stop: true
+  plan-completion-check: true
+  version-changelog-nudge: true
+  owner-acceptance-nudge: true
+  release-acceptance-guard: true

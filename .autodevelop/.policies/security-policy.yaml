@@ -1,0 +1,12 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Other consumers copy the kit example into their <instance>/autodevelop/.policies/ folder.
+# Forbidden project ids live in instance config.json — this file does not list them.
+neverCommit:
+  - ".env*"
+  - serviceAccount.json
+  - "**/firebase-admin*.json"
+noSecretValuesInChat: true
+forbiddenProjectsSource: config.json
+forbiddenProjectsPath: forbiddenProjects
+msmUploadOneService: true
+msmPeekForbidden: true

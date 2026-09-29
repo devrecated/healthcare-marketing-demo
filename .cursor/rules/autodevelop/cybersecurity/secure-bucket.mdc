@@ -1,0 +1,23 @@
+---
+description: Env, rules, and secrets paths load Autodevelop secrets playbooks
+globs:
+  - "**/.env*"
+  - "**/*firestore.rules"
+  - "**/*storage.rules"
+  - "**/secrets/**"
+alwaysApply: false
+---
+
+# Secrets and rules files load secrets playbooks
+
+Copyright (c) 2026 Devrecated.
+
+When these files are in play, load Autodevelop secrets playbooks. Use what comes back. Do not invent that text. Do not name a third-party skill as the tool.
+
+Never say bucket, MCP, or tool names in chat.
+
+If playbooks do not load, say only: Autodevelop is not connected. Run `npx autodevelop login` and reload this window. Then stop.
+
+Must never: print secret values, peek env files into chat.
+
+Standing deny lines stay in [no-secret-exfil](no-secret-exfil.mdc) and [appsec-baseline](appsec-baseline.mdc). Wrapper rules: [mcp-wrappers](../process/mcp-wrappers.mdc).

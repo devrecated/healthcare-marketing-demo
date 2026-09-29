@@ -1,0 +1,58 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Autodevelop-self host.
+# Client /devops still reads this file. This repo is not a Firebase app.
+ids:
+  - local
+  - staging
+  - production
+  - preview
+defaultStagingName: staging
+defaultProductionName: production
+promote:
+  - local
+  - staging
+  - production
+environments:
+  local:
+    role: sandbox
+    host: none
+    hostname: ""
+    whoMayDeploy: developers
+    origins:
+      host: ""
+      api: ""
+      tickets: ""
+  staging:
+    role: qa
+    host: gce
+    hostname: brain.devrecated.com
+    whoMayDeploy: operators
+    origins:
+      host: https://brain.devrecated.com
+      api: https://api.devrecated.com
+      tickets: https://sandbox.tickets.devrecated.com
+  production:
+    role: production
+    host: vercel
+    hostname: ""
+    whoMayDeploy: operators
+    origins:
+      host: ""
+      api: ""
+      tickets: ""
+  preview:
+    role: preview
+    host: vercel
+    hostname: ""
+    whoMayDeploy: operators
+    origins:
+      host: ""
+      api: ""
+      tickets: ""
+# host: none | firebase | cloud-run | vercel | supabase | gce
+# This checkout’s staging brain/API run on GCE behind Cloudflare. Public marketing sites stay vercel.
+# origins.host → AUTODEVELOP_HOST
+# origins.api → AUTODEVELOP_API_ORIGIN
+# origins.tickets → NEXT_PUBLIC_AUTODEVELOP_TICKETS_ORIGIN
+# Staging tickets UI is Cloudflare Pages — custom names on devrecated.com.
+# Env wins. Never set a hosted origin to localhost or 127.0.0.1.

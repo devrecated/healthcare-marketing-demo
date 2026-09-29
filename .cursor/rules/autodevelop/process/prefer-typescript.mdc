@@ -1,0 +1,26 @@
+---
+description: New and touched product code is TypeScript. Plugin scripts stay .mjs.
+alwaysApply: true
+---
+
+# Prefer TypeScript
+
+Copyright (c) 2026 Devrecated.
+
+Write new code in **TypeScript** where the runtime and build allow it.
+
+- New files are `.ts` / `.tsx`.
+- If we **touch** a `.mjs` / `.jsx` product module, convert that file (and add a `tsconfig.json` plus a test runner that can run it). Do not mass-rewrite the whole monorepo.
+- New services (for example a standalone MCP server, the ticket API, an agent runtime) start as TypeScript with a `tsconfig.json` and a build or a TS-aware runtime. Do not start a new service in plain `.mjs`.
+- Type the boundaries: tool inputs/outputs, MCP request/response shapes, policy and capability manifests, and any credential-carrying interface get explicit types. No `any` at a trust boundary.
+
+## Plugin scripts stay `.mjs`
+
+The `.cursor/skills/**/scripts/*.mjs` local hands stay `.mjs` until the plugin has a build. Those run under Cursor with no compile step. Converting them without a build is worse TypeScript.
+
+## Do not churn working code
+
+This rule does not authorize a mass `.mjs` → `.ts` rewrite. Per [anti-overengineering](anti-overengineering.mdc):
+
+- Convert a working `.mjs` / `.jsx` product file only when this work already touches it, or when the task is that migration.
+- Migrate a tree to TypeScript deliberately (`tsconfig.json`, build or strip-types runner, and tests), not file-by-file drive-by.

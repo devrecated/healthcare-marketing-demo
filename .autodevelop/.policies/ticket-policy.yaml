@@ -1,0 +1,11 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Other consumers copy the kit example into their <instance>/autodevelop/.policies/ folder.
+requiredForProductWork: true
+kitTreesExempt: true
+wayfinderMaxTickets: 1
+previewBeforeCreate: true
+autoCreateIfMissing: true
+childIssues: false
+bindVia: "#N"
+# Kit trees (.cursor skills/hooks/rules autodevelop and third-party, plus the handbook)
+# may change without a board ticket. Product and instance bindings may not.

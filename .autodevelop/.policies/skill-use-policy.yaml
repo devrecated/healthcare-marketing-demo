@@ -1,0 +1,11 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Other consumers copy the kit example into their <instance>/autodevelop/.policies/ folder.
+# Do not list every skill here. Invoke flags live in skill-invoke.yaml.
+strictness: normal
+invokeSource: .cursor/skills/autodevelop-internal/skill-invoke.yaml
+excludeNames: []
+excludeGlobs: []
+allowNames: []
+# normal = follow skill-invoke.yaml (manual vs automatic).
+# strict = only invoke allowNames, or automatic when skill-invoke.yaml says so,
+# and never an excluded name or glob.

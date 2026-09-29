@@ -1,0 +1,9 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Other consumers copy the kit example into their <instance>/autodevelop/.policies/ folder.
+conventionalCommits: optional
+subjectStyle: imperative
+clientsMayChangeConvention: true
+allowNoVerify: false
+allowForcePush: false
+# Conventional subjects are preferred when the commit-message skill is present.
+# --no-verify and force-push stay forbidden even when branch ask flags are false.

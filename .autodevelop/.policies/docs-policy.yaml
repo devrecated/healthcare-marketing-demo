@@ -1,0 +1,12 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Other consumers copy the kit example into their <instance>/autodevelop/.policies/ folder.
+publicHandbook: autodevelop-docs/
+internalHandbook: docs/internal/
+internalOperatorDocs: services/host/docs/
+publishedPricingAllowed: true
+noMarginOrUnitEconomicsInRepo: true
+noProductivityMultipleClaims: true
+professionalVoice: true
+noChatAsidesInFiles: true
+# Public handbook states what the product does. Operator runbooks stay private.
+# This instance publishes the subscription price and support-hour band in docs/ and README.md.

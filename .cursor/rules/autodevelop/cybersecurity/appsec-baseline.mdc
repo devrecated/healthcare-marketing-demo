@@ -1,0 +1,14 @@
+---
+description: Everyday secret handling and input safety (not a full security audit)
+alwaysApply: true
+---
+
+# AppSec baseline
+
+Copyright (c) 2026 Devrecated.
+
+- Never commit `.env*`, `serviceAccount.json`, `firebase-admin` JSON, or tokens. Use `pnpm env:sandbox` / `env:prod` (or `env:dev` for local Docker) and Secret Manager.
+- Never log ID tokens, access codes, passwords, or raw PII.
+- Validate input at the API/Functions boundary. Do not trust the client role for privileged writes.
+- No `eval` / `exec` on user input. Do not use `dangerouslySetInnerHTML` with unsanitized content.
+- For a full OWASP pass, use the `auditing-security` skill. For Firestore/Storage rules files, use [secure-bucket.mdc](secure-bucket.mdc).

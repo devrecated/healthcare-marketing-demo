@@ -1,0 +1,10 @@
+# Copyright (c) 2026 Devrecated
+# Instance copy (reserved slug: devrecated). Other consumers copy the kit example into their <instance>/autodevelop/.policies/ folder.
+# Declares that approval is required. Kit phrases stay in the rules.
+# Git: YES PUSH TO RELEASE when branch-policy.askProduction is true.
+# Local deploy: DEPLOYED TO PRODUCTION.
+approvalRequired: true
+gitConfirmFollowsBranchAsk: true
+deployConfirmRequired: true
+requireHeadOnProduction: true
+sequentialDeploys: true

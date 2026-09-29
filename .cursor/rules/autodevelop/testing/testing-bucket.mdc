@@ -1,0 +1,22 @@
+---
+description: Test files load Autodevelop testing playbooks
+globs:
+  - "**/*.{test,spec}.{ts,tsx,js}"
+  - "tests/**"
+  - "e2e/**"
+alwaysApply: false
+---
+
+# Test files load testing playbooks
+
+Copyright (c) 2026 Devrecated.
+
+When these files are in play, load Autodevelop testing playbooks (or honor `/testing` if they typed it). Use what comes back. Do not invent that text. Do not name a third-party skill as the tool.
+
+Never say bucket, MCP, or tool names in chat.
+
+If playbooks do not load, say only: Autodevelop is not connected. Run `npx autodevelop login` and reload this window. Then stop.
+
+Must never: mail, deploy, invent a ticket number.
+
+Product work still needs a bound ticket. See [ticket-required](../process/ticket-required.mdc). Wrapper rules: [mcp-wrappers](../process/mcp-wrappers.mdc).

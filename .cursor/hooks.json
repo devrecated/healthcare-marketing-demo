@@ -1,0 +1,101 @@
+{
+  "copyright": "Copyright (c) 2026 Devrecated.",
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "autodevelop hook guard-shell",
+        "failClosed": true,
+        "timeout": 10
+      },
+      {
+        "command": "autodevelop hook guard-stakeholder-mail",
+        "failClosed": true,
+        "timeout": 8
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "autodevelop hook pr-link-hint",
+        "matcher": "gh\\s+pr\\s+create",
+        "timeout": 8
+      },
+      {
+        "command": "autodevelop hook ready-for-feedback",
+        "matcher": "gh\\s+pr\\s+create",
+        "timeout": 8
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "autodevelop hook guard-package-boundaries",
+        "matcher": "Write|StrReplace",
+        "failClosed": true,
+        "timeout": 10
+      },
+      {
+        "command": "autodevelop hook nudge-edits",
+        "matcher": "Write|StrReplace",
+        "timeout": 10
+      },
+      {
+        "command": "autodevelop hook ticket-progress-files",
+        "matcher": "Write|StrReplace",
+        "timeout": 8
+      },
+      {
+        "command": "autodevelop hook ticket-required",
+        "matcher": "Write|StrReplace",
+        "timeout": 8
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "autodevelop hook session-context",
+        "timeout": 5
+      },
+      {
+        "command": "autodevelop hook ticket-session",
+        "timeout": 5
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "autodevelop hook log-session-outcome",
+        "timeout": 8
+      },
+      {
+        "command": "autodevelop hook session-end-nudge",
+        "timeout": 5
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "autodevelop hook gate-prompt",
+        "matcher": "UserPromptSubmit",
+        "timeout": 5
+      }
+    ],
+    "afterAgentResponse": [
+      {
+        "command": "autodevelop hook worktree-status",
+        "timeout": 8
+      }
+    ],
+    "stop": [
+      {
+        "command": "autodevelop hook ticket-required",
+        "timeout": 8
+      },
+      {
+        "command": "autodevelop hook plan-completion-check",
+        "timeout": 8
+      },
+      {
+        "command": "autodevelop hook worktree-status",
+        "timeout": 8,
+        "loop_limit": 1
+      }
+    ]
+  }
+}

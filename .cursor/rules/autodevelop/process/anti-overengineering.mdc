@@ -1,0 +1,13 @@
+---
+description: Keep changes scoped to the request
+alwaysApply: true
+---
+
+# Anti-over-engineering
+
+Copyright (c) 2026 Devrecated.
+
+- Only change what the user asked for. No drive-by refactors, new frameworks, or extra abstractions.
+- Reuse hooks, converters, and components that already exist.
+- Do not add a dependency if a few lines in-tree will do.
+- Match the file’s current style. Do not “modernize” the whole module while fixing one bug.

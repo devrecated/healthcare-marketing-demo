@@ -1,0 +1,25 @@
+---
+description: Employee-shared internal skills live under autodevelop-internal, not Brain or personal skills
+alwaysApply: true
+---
+
+# Internal skills (employee-shared)
+
+Copyright (c) 2026 Devrecated.
+
+Skills used **in this repo** by Autodevelop employees that are **not** Autodevelop Brain / subscriber playbooks belong under [`.cursor/skills/autodevelop-internal/`](../../skills/autodevelop-internal/) so the team shares them via git.
+
+## Do
+
+- Put operator / dogfood / meta playbooks under `.cursor/skills/autodevelop-internal/<category>/<name>/SKILL.md`.
+- Mirror new leaves under `kits/cursor/skills/autodevelop-internal/` when the kit pack is kept in sync.
+- Set `invoke: manual` in `skill-invoke.yaml` for internal skills.
+- Keep Brain / sold playbooks in `services/brain/skills/{autodevelop,third-party}/` and wire them through `skill-catalog.yaml` + `bucket_*`.
+- Keep client instance bindings under `.cursor/skills/<client-name>/`.
+
+## Do not
+
+- Put those internal skills in `services/brain/skills/` (Brain / hosted product IP).
+- Put shared team skills only in `~/.cursor/skills/` (personal machine — invisible to other employees).
+- Add internal skills to customer `mcp_buckets.*.may_invoke` or `loops.*.steps`.
+- Expose internal skill names as remote MCP tools.

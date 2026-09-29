@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Devrecated
+# In-app FeatureDemo registry.
+# Update this file in the same commit as the flag and onboarding component.
+# /feature-demo and /new-feature-demo both write here.
+
+demos:
+  - id: command-palette
+    kind: new-feature
+    flag: commandPaletteOnboarding
+    env: VITE_FF_COMMAND_PALETTE_ONBOARDING
+    storageId: command-palette
+    default: true
+    component: web/app/src/components/command-palette/CommandPaletteOnboarding.tsx
+    status: live

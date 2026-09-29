@@ -1,0 +1,74 @@
+# Copyright (c) 2026 Devrecated
+# Copy to .cursor/skills/<instance>/autodevelop/.configuration/hyperparameters.yaml
+# Expanded knobs the hosted MCP pre-query hook consumes when
+# hyperparameters.config is low precision (sparse, missing fields, or precision: low).
+# Generated or filled by the expand-hyperparameters agent. Do not put secrets here.
+
+# Whether the sibling .config is complete enough to consume directly.
+# Enum: low | high
+precision: high
+
+# Sampling temperature for model-facing questions (creativity). Range: 0.0–2.0
+temperature: 0.2
+
+# Hook conservatism. 0 = cautious, 3 = permissive. Range: 0–3
+risk_level: 1
+
+# Voice for injected system text. Enum: professional | concise | coaching | formal
+tone: professional
+
+# Nucleus sampling cap. Range: 0.0–1.0
+top_p: 1.0
+
+# Maximum completion tokens. Range: 256–8192
+max_output_tokens: 1024
+
+# Presence penalty. Range: -2.0–2.0
+presence_penalty: 0
+
+# Frequency penalty. Range: -2.0–2.0
+frequency_penalty: 0
+
+# Character cap for injected context. Range: 1000–32000
+context_budget: 12000
+
+# Default retrieval hits when the caller omits limit. Range: 1–50
+retrieval_limit: 8
+
+# Require citations in the system prompt. Range: 0–1
+citation_required: 1
+
+# Model-call deadline in milliseconds. Range: 1000–120000
+timeout_ms: 30000
+
+# Extra attempts after a transient failure. Range: 0–5
+retry_count: 1
+
+# How firmly tone and risk are restated. Range: 0–3
+instruction_strength: 2
+
+# Whether a request opens one generalized ticket or may split. Enum: consolidate | split
+ticket_mode: consolidate
+
+# Maximum Autodevelop tickets one request may open. Range: 1–8
+ticket_max_per_request: 1
+
+expansion:
+  generated: true
+  system_suffix: |
+    Write in a professional voice. Answer only from the supplied organization context.
+    Cite ticket numbers, file titles, and recap dates. If a fact is missing, say so.
+    Do not invent issues.
+  tone_instructions: Professional product voice. Complete sentences. No scratch-pad fragments.
+  risk:
+    refuse_speculation: true
+    require_citations: true
+    max_temperature: 0.4
+  tools:
+    context_ask:
+      temperature: 0.2
+      retrieval_limit: 8
+    context_search:
+      retrieval_limit: 8
+    issues_search:
+      retrieval_limit: 8
