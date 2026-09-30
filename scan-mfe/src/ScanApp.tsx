@@ -388,6 +388,18 @@ export function ScanApp({ onSignedOut }: { onSignedOut: () => void }) {
     })
   }
 
+  function finishSession() {
+    for (const item of itemsRef.current) {
+      if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
+    }
+    inFlightRef.current.clear()
+    syncItems([])
+    setSessionDeducted(0)
+    setBatchConfirming(false)
+    setView("scan")
+    toast.message("Session cleared")
+  }
+
   async function confirmAllPending() {
     const pending = itemsRef.current.filter(
       (item) => item.status === "ready" && item.matches.length > 0,
@@ -505,13 +517,7 @@ export function ScanApp({ onSignedOut }: { onSignedOut: () => void }) {
             Add photos
           </Button>
 
-          <Button
-            className="min-h-11 w-full"
-            variant="outline"
-            onClick={() => {
-              window.location.href = suppliesHref
-            }}
-          >
+          <Button className="min-h-11 w-full" variant="outline" onClick={finishSession}>
             Finish session
           </Button>
 
