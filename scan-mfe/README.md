@@ -30,3 +30,12 @@ when the phone cannot reach `localhost:3000`.
 
 Deploy as its own project (Root Directory `scan-mfe`). Set `VITE_API_BASE` and
 `VITE_HOST_URL` to the host project URL. Vite `base` is `/`.
+
+### PWA
+
+Production builds register a service worker (`vite-plugin-pwa`) and ship a web
+manifest. Install from the browser (“Add to Home Screen” / install icon).
+
+- Icons are generated on `pnpm icons` / `prebuild` (`public/pwa-192.png`, `pwa-512.png`).
+- API calls to the host stay network-only (not cached offline).
+- HTTPS required for install (Vercel provides this).
