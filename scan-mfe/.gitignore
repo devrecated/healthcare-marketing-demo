@@ -5,3 +5,6 @@ dist
 .env.*.local
 *.log
 .DS_Store
+dev-dist
+public/pwa-192.png
+public/pwa-512.png
