@@ -17,18 +17,14 @@ Cross-device demo uses Supabase for shared `supplies` + `usage_log`.
 | Host console | `demo/` | `pnpm dev` → :3000 |
 | Scan MFE | `scan-mfe/` | `pnpm dev` → :5173 |
 
-### Vercel (multi-service)
+### Vercel (two projects, same repo)
 
-Root [`vercel.json`](../vercel.json) deploys both as one project:
+Import the repo **twice**:
 
-- `scan-mfe` public at `/scan`
-- `demo` public at `/` (including `/api/*`)
-- No service bindings (browser same-origin API calls)
+1. **Host** — Root Directory `demo`, Next.js. Env: OpenRouter/Gemini, Supabase (+ service role), `NEXT_PUBLIC_SCAN_MFE_URL=https://<scan-project>.vercel.app`
+2. **Scan** — Root Directory `scan-mfe`, Vite, output `dist`. Env: `VITE_API_BASE` + `VITE_HOST_URL` = `https://<host-project>.vercel.app`, plus `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`
 
-Set host secrets (OpenRouter/Gemini/Supabase service role) on the project. You can omit
-`NEXT_PUBLIC_SCAN_MFE_URL` on Vercel (defaults to `/scan`). For the MFE, omit
-`VITE_API_BASE` / `VITE_HOST_URL` on Vercel (same origin). Still set
-`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` for the scan service (or project-wide).
+Redeploy after setting `NEXT_PUBLIC_*` / `VITE_*`. Host CORS allows the scan origin via `NEXT_PUBLIC_SCAN_MFE_URL` (and LAN during demos).
 
 
 ## Host setup
@@ -47,7 +43,7 @@ Set host secrets (OpenRouter/Gemini/Supabase service role) on the project. You c
 2. Copy `scan-mfe/.env.example` → `.env.local` (`VITE_API_BASE`, `VITE_HOST_URL`, Supabase anon).
 3. `pnpm dev` — [http://localhost:5173](http://localhost:5173) (password shown on the login screen).
 
-Host sidebar / Mock forms / Usage log open the MFE URL. `/scan` on the host redirects there.
+Host **Mock forms** / **Usage log** open the MFE URL. `/scan` on the host redirects there.
 
 ## Cross-device demo
 

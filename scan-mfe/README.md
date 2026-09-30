@@ -28,5 +28,5 @@ when the phone cannot reach `localhost:3000`.
 
 ### Vercel
 
-Mounted at `/scan` via root `vercel.json` (Vite `base` is `/scan/` when `VERCEL` is set).
-Same-origin API calls — leave `VITE_API_BASE` / `VITE_HOST_URL` unset in production.
+Deploy as its own project (Root Directory `scan-mfe`). Set `VITE_API_BASE` and
+`VITE_HOST_URL` to the host project URL. Vite `base` is `/`.
