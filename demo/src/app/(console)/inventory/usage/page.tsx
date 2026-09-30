@@ -19,8 +19,8 @@ function csvCell(value: string | number | null): string {
 export default function UsageLogPage() {
   const { data: usageLog, loading, error } = useLiveUsageLog()
 
-  const totalQty = usageLog.reduce((sum, entry) => sum + entry.qty, 0)
   const distinctForms = new Set(usageLog.map((entry) => entry.formId ?? "")).size
+  const distinctSkus = new Set(usageLog.map((entry) => entry.sku)).size
 
   const columns = useMemo<AppColumn<UsageLogEntry>[]>(
     () => [
@@ -29,14 +29,13 @@ export default function UsageLogPage() {
       { accessorKey: "formId", header: "Form" },
       { accessorKey: "sku", header: "SKU" },
       { accessorKey: "device", header: "Device" },
-      { header: "Qty", cell: ({ row }) => row.original.qty },
       { accessorKey: "approvedBy", header: "Approved by" },
     ],
     [],
   )
 
   function exportCsv() {
-    const headerRow = ["timestamp", "form_id", "center", "sku", "device", "qty", "approved_by"]
+    const headerRow = ["timestamp", "form_id", "center", "sku", "device", "approved_by"]
     const lines = [headerRow.join(",")]
     for (const entry of usageLog) {
       lines.push(
@@ -46,7 +45,6 @@ export default function UsageLogPage() {
           csvCell(entry.centerHint),
           csvCell(entry.sku),
           csvCell(entry.device),
-          csvCell(entry.qty),
           csvCell(entry.approvedBy),
         ].join(","),
       )
@@ -83,7 +81,7 @@ export default function UsageLogPage() {
       <Reveal>
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
           <StatCard label="Devices recorded" value={loading ? "…" : String(usageLog.length)} tone="spruce" />
-          <StatCard label="Total quantity" value={loading ? "…" : String(totalQty)} tone="ink" />
+          <StatCard label="Distinct SKUs" value={loading ? "…" : String(distinctSkus)} tone="ink" />
           <StatCard label="Forms" value={loading ? "…" : String(distinctForms)} tone="ink" />
         </div>
       </Reveal>

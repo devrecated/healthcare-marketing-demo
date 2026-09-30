@@ -13,7 +13,6 @@ const dateStamp = new Intl.DateTimeFormat("en-US", {
 })
 
 const dateTimeStamp = new Intl.DateTimeFormat("en-US", {
-  timeZone: "UTC",
   month: "short",
   day: "numeric",
   year: "numeric",
@@ -27,22 +26,16 @@ export function formatMoney(amount: number) {
 
 export function formatWhen(iso: string) {
   const dateOnly = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-  const dateTime = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
-  const date = dateOnly
-    ? new Date(Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 12))
-    : dateTime
-      ? new Date(
-          Date.UTC(
-            Number(dateTime[1]),
-            Number(dateTime[2]) - 1,
-            Number(dateTime[3]),
-            Number(dateTime[4]),
-            Number(dateTime[5]),
-          ),
-        )
-      : new Date(iso)
+  if (dateOnly) {
+    const date = new Date(
+      Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 12),
+    )
+    if (Number.isNaN(date.getTime())) return iso
+    return dateStamp.format(date)
+  }
+  const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return iso
-  return (dateTime ? dateTimeStamp : dateStamp).format(date)
+  return dateTimeStamp.format(date)
 }
 
 export function lineMaterial(line: MaterialLine) {

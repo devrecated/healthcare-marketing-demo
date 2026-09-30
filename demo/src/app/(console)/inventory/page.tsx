@@ -1,7 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
 
 import { type AppColumn } from "@/components/console/data-table"
 import { ControlledBadge, ExpiryBadge, StockBadge } from "@/components/console/badges"
@@ -11,18 +12,54 @@ import { Reveal } from "@/components/console/reveal"
 import { SupplyDialog } from "@/components/forms/supply-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useLiveSupplies } from "@/hooks/use-live-inventory"
+import { useLiveSupplies, useLiveUsageLog } from "@/hooks/use-live-inventory"
 import { formatMoney, formatWhen, isLowStock } from "@/lib/money"
 import { dayStamp, dueSupplies } from "@/lib/reconciliation"
 import { addDays } from "@/lib/calendar"
 import { useStore } from "@/lib/store"
-import type { Supply } from "@/lib/types"
+import type { Supply, UsageLogEntry } from "@/lib/types"
 
 export default function InventoryPage() {
   const { reconciliations, dispatch } = useStore()
   const { data: supplies, loading, error } = useLiveSupplies()
+  const { data: usageLog, loading: usageLoading, refresh: refreshUsage } = useLiveUsageLog()
   const router = useRouter()
   const [query, setQuery] = useState("")
+  const [latestBatch, setLatestBatch] = useState<UsageLogEntry[] | null>(null)
+  const seenIds = useRef<Set<string> | null>(null)
+  const supplyFingerprint = useRef<string>("")
+
+  // When stock quantities change (supplies realtime), also refresh usage history —
+  // covers projects that only published `supplies` to Realtime.
+  useEffect(() => {
+    const next = supplies.map((supply) => `${supply.id}:${supply.quantity}`).join("|")
+    if (!supplyFingerprint.current) {
+      supplyFingerprint.current = next
+      return
+    }
+    if (next === supplyFingerprint.current) return
+    supplyFingerprint.current = next
+    void refreshUsage()
+  }, [supplies, refreshUsage])
+
+  // Toast + banner when new usage_log rows arrive (e.g. phone Confirm & deduct).
+  useEffect(() => {
+    if (usageLoading) return
+    if (seenIds.current === null) {
+      seenIds.current = new Set(usageLog.map((entry) => entry.id))
+      return
+    }
+    const fresh = usageLog.filter((entry) => !seenIds.current!.has(entry.id))
+    if (fresh.length === 0) return
+    for (const entry of usageLog) seenIds.current.add(entry.id)
+    setLatestBatch(fresh)
+    const summary = fresh.map((entry) => entry.device).join(", ")
+    toast.success(`Scan deducted ${fresh.length} item${fresh.length === 1 ? "" : "s"}`, {
+      description: summary,
+      duration: 8000,
+    })
+  }, [usageLog, usageLoading])
+
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase()
     return supplies.filter((supply) => {
@@ -102,6 +139,40 @@ export default function InventoryPage() {
       {error ? (
         <p className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{error}</p>
       ) : null}
+
+      {latestBatch && latestBatch.length > 0 ? (
+        <div className="mb-4 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-950">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold">
+                Just deducted from scan ({latestBatch.length} item
+                {latestBatch.length === 1 ? "" : "s"})
+              </p>
+              <ul className="mt-2 space-y-1 text-sm">
+                {latestBatch.map((entry) => (
+                  <li key={entry.id}>
+                    <span className="font-medium">{entry.device}</span>
+                    <span className="text-emerald-900/70">
+                      {" "}
+                      · {entry.sku}
+                      {entry.centerHint ? ` · ${entry.centerHint}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Button
+              className="min-h-11"
+              size="sm"
+              variant="outline"
+              onClick={() => setLatestBatch(null)}
+            >
+              Dismiss
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <Reveal>
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
           <StatCard label="Inventory value" value={loading ? "…" : formatMoney(value)} tone="spruce" />
@@ -119,6 +190,7 @@ export default function InventoryPage() {
           />
         </div>
       </Reveal>
+
       <DataTable
         columns={columns}
         data={rows}

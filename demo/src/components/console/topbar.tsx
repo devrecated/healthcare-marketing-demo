@@ -61,8 +61,20 @@ export function Topbar({
         variant="outline"
         className="min-h-11"
         onClick={() => {
-          dispatch({ type: "reset" })
-          toast("Demo data restored")
+          void (async () => {
+            dispatch({ type: "reset" })
+            try {
+              const res = await fetch("/api/demo/reset", { method: "POST" })
+              const body = (await res.json().catch(() => ({}))) as { error?: string }
+              if (!res.ok) {
+                toast.error(body.error || "Local demo restored; Supabase reset failed")
+                return
+              }
+              toast("Demo data restored (local + Supabase)")
+            } catch {
+              toast.error("Local demo restored; Supabase reset failed")
+            }
+          })()
         }}
       >
         <RotateCcw />

@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         })
         continue
       }
-      const qty = Math.max(1, device.qty || 1)
+      const qty = 1
       entries.push({
         id: newId("use"),
         form_id: body.form_id ?? null,

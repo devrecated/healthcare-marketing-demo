@@ -45,10 +45,15 @@ export function SidebarNav({
   return (
     <nav className="flex flex-col gap-1 px-2">
       {links.map((link) => {
-        const active =
-          link.href === "/"
+        // Prefer the longest matching href so /inventory does not stay active on
+        // /inventory/usage, /inventory/intake, etc.
+        const matches = links.filter((candidate) =>
+          candidate.href === "/"
             ? pathname === "/"
-            : pathname === link.href || pathname.startsWith(`${link.href}/`)
+            : pathname === candidate.href || pathname.startsWith(`${candidate.href}/`),
+        )
+        const best = matches.sort((a, b) => b.href.length - a.href.length)[0]
+        const active = best?.href === link.href
         const Icon = link.icon
         return (
           <Link

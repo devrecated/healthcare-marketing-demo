@@ -141,9 +141,9 @@ export default function ScanPage() {
           productName: device.product_name || hit.supply.name,
           sku: hit.supply.sku,
           supplyId: hit.supply.id,
-          qty: Math.max(1, device.qty || 1),
+          qty: 1,
           confidence: device.confidence ?? 0,
-          raw: device,
+          raw: { ...device, qty: 1 },
         })
       }
       setMatches(matched)
@@ -293,7 +293,7 @@ export default function ScanPage() {
             variant="outline"
             onClick={() => fileRef.current?.click()}
           >
-            Choose / take photo
+            Choose photo
           </Button>
         </section>
       ) : null}
@@ -318,9 +318,7 @@ export default function ScanPage() {
                 {matches.map((row) => (
                   <li key={`${row.supplyId}-${row.sku}`} className="flex items-baseline justify-between gap-3 text-sm">
                     <span className="font-medium">{row.productName}</span>
-                    <span className="shrink-0 text-muted-foreground">
-                      {row.sku} · ×{row.qty}
-                    </span>
+                    <span className="shrink-0 text-muted-foreground">{row.sku}</span>
                   </li>
                 ))}
               </ul>
@@ -359,15 +357,12 @@ export default function ScanPage() {
             <p className="mt-3 text-lg font-semibold">
               Deducted {deducted.length} item{deducted.length === 1 ? "" : "s"}
             </p>
-            <p className="mt-1 text-sm opacity-80">Supplies on the laptop update live.</p>
           </div>
           <ul className="rounded-2xl border bg-card p-4 text-sm">
             {deducted.map((row, index) => (
               <li key={`${row.sku}-${index}`} className="flex justify-between gap-3 py-1">
                 <span>{row.device}</span>
-                <span className="text-muted-foreground">
-                  {row.sku} · −{row.qty}
-                </span>
+                <span className="text-muted-foreground">{row.sku}</span>
               </li>
             ))}
           </ul>
