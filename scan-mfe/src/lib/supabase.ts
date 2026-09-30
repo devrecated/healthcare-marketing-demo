@@ -61,8 +61,6 @@ export function apiBase() {
   if (configured != null && String(configured).length > 0) {
     return String(configured).replace(/\/$/, "")
   }
-  // Production multi-service: same origin as the host (/api/*).
-  if (import.meta.env.PROD) return ""
   return "http://localhost:3000"
 }
 
@@ -71,6 +69,5 @@ export function hostUrl() {
   if (configured != null && String(configured).length > 0) {
     return String(configured).replace(/\/$/, "")
   }
-  if (import.meta.env.PROD) return ""
   return "http://localhost:3000"
 }

@@ -3,11 +3,8 @@ import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import { fileURLToPath, URL } from "node:url"
 
-// On Vercel multi-service, the MFE is mounted at /scan. Locally keep "/".
-const base = process.env.VERCEL ? "/scan/" : "/"
-
 export default defineConfig({
-  base,
+  base: "/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
