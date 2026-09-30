@@ -23,6 +23,9 @@ importers:
       sonner:
         specifier: ^2.0.8
         version: 2.0.8(@types/react@19.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      workbox-window:
+        specifier: ^7.3.0
+        version: 7.4.1
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4
