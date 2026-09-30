@@ -25,3 +25,8 @@ when the phone cannot reach `localhost:3000`.
 | `/api/extract`, `/api/scan/confirm` | Host `demo/` (service role + OpenRouter/Gemini keys) |
 | Live Supplies / usage log | Host console |
 | Auth | Separate demo password gate (not shared storage across origins) |
+
+### Vercel
+
+Mounted at `/scan` via root `vercel.json` (Vite `base` is `/scan/` when `VERCEL` is set).
+Same-origin API calls — leave `VITE_API_BASE` / `VITE_HOST_URL` unset in production.

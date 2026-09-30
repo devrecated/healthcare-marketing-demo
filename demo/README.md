@@ -17,6 +17,20 @@ Cross-device demo uses Supabase for shared `supplies` + `usage_log`.
 | Host console | `demo/` | `pnpm dev` → :3000 |
 | Scan MFE | `scan-mfe/` | `pnpm dev` → :5173 |
 
+### Vercel (multi-service)
+
+Root [`vercel.json`](../vercel.json) deploys both as one project:
+
+- `scan-mfe` public at `/scan`
+- `demo` public at `/` (including `/api/*`)
+- No service bindings (browser same-origin API calls)
+
+Set host secrets (OpenRouter/Gemini/Supabase service role) on the project. You can omit
+`NEXT_PUBLIC_SCAN_MFE_URL` on Vercel (defaults to `/scan`). For the MFE, omit
+`VITE_API_BASE` / `VITE_HOST_URL` on Vercel (same origin). Still set
+`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` for the scan service (or project-wide).
+
+
 ## Host setup
 
 1. `pnpm install` in `demo/`.
