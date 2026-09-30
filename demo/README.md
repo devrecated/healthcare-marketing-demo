@@ -58,7 +58,7 @@ Flow: `inventory/intake` (upload) -> `POST /api/extract` (server-side Gemini) ->
 4. Open `/inventory/usage` and **Export CSV** to show the center-sheet mirror.
 
 Say out loud: accuracy is an experiment (show `pnpm eval`), the weekly shelf-count still happens,
-Athena is untouched, and real patient forms require Gemini on Vertex AI under a BAA.
+Athena is untouched, and real patient forms require a real, custom, self-hosted, tuned model.
 
 ### Out of scope (do not build here)
 
