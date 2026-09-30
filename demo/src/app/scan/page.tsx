@@ -330,19 +330,24 @@ export default function ScanPage() {
       queueMicrotask(() => pumpRef.current())
       toast.success(files.length === 1 ? "Captured" : `Captured ${files.length}`, {
         duration: 1800,
-        icon: <CheckCircle2 className="size-4 shrink-0" color="#ffffff" strokeWidth={2.5} />,
+        icon: (
+          <CheckCircle2
+            className="size-4 shrink-0 text-primary-foreground"
+            strokeWidth={2.5}
+          />
+        ),
         style: {
-          "--normal-bg": "#059669",
-          "--normal-text": "#ffffff",
-          "--normal-border": "#047857",
-          background: "#059669",
-          color: "#ffffff",
-          border: "1px solid #047857",
+          "--normal-bg": "var(--primary)",
+          "--normal-text": "var(--primary-foreground)",
+          "--normal-border": "var(--primary)",
+          background: "var(--primary)",
+          color: "var(--primary-foreground)",
+          border: "1px solid var(--primary)",
         } as CSSProperties,
         classNames: {
-          toast: "!bg-[#059669] !text-white !border-[#047857]",
-          title: "!text-white",
-          icon: "!text-white",
+          toast: "!bg-primary !text-primary-foreground !border-primary",
+          title: "!text-primary-foreground",
+          icon: "!text-primary-foreground",
         },
       })
     },
