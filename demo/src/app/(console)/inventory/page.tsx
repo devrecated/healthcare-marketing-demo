@@ -11,6 +11,7 @@ import { Reveal } from "@/components/console/reveal"
 import { SupplyDialog } from "@/components/forms/supply-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useLiveSupplies } from "@/hooks/use-live-inventory"
 import { formatMoney, formatWhen, isLowStock } from "@/lib/money"
 import { dayStamp, dueSupplies } from "@/lib/reconciliation"
 import { addDays } from "@/lib/calendar"
@@ -18,7 +19,8 @@ import { useStore } from "@/lib/store"
 import type { Supply } from "@/lib/types"
 
 export default function InventoryPage() {
-  const { supplies, reconciliations, dispatch } = useStore()
+  const { reconciliations, dispatch } = useStore()
+  const { data: supplies, loading, error } = useLiveSupplies()
   const router = useRouter()
   const [query, setQuery] = useState("")
   const rows = useMemo(() => {
@@ -97,24 +99,31 @@ export default function InventoryPage() {
           </Button>
         </div>
       </PageIntro>
+      {error ? (
+        <p className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{error}</p>
+      ) : null}
       <Reveal>
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
-          <StatCard label="Inventory value" value={formatMoney(value)} tone="spruce" />
+          <StatCard label="Inventory value" value={loading ? "…" : formatMoney(value)} tone="spruce" />
           <StatCard
             label="Below reorder"
-            value={String(low)}
+            value={loading ? "…" : String(low)}
             hint={low > 0 ? "Amber means reorder, not an alarm" : "All supplies are above reorder"}
             tone={low > 0 ? "warn" : "spruce"}
           />
           <StatCard
             label="Due for count"
-            value={String(due)}
+            value={loading ? "…" : String(due)}
             hint={lastSigned ? `Last signed ${formatWhen(lastSigned.date)}` : "No signed count yet"}
             tone={due > 0 ? "warn" : "spruce"}
           />
         </div>
       </Reveal>
-      <DataTable columns={columns} data={rows} empty="No supplies match that search." />
+      <DataTable
+        columns={columns}
+        data={rows}
+        empty={loading ? "Loading supplies…" : "No supplies match that search."}
+      />
     </div>
   )
 }

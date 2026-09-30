@@ -24,8 +24,11 @@ const forms = [
     formId: "PU-2026-0912",
     devices: [
       { name: "Total knee implant set", mfr: "ZimVie", ref: "IMP-KNEE-01", udi: "(01)00841234567890", lot: "KNE-4471", qty: 1 },
-      { name: "Bone cement", mfr: "Stryker", ref: "CON-CEM-04", udi: "(01)00849876543210", lot: "CEM-2231", qty: 2 },
+      { name: "Bone cement", mfr: "Stryker", ref: "CON-CEM-04", udi: "(01)00849876543210", lot: "CEM-2231", qty: 1 },
       { name: "Orthopedic drape pack", mfr: "Medline", ref: "CON-DRP-12", udi: "(01)00847778889990", lot: "DRP-8890", qty: 1 },
+      { name: "Sterile gloves, size 7", mfr: "Medline", ref: "PPE-GLV-7", udi: "(01)00841110002220", lot: "GLV-7701", qty: 1 },
+      { name: "Vicryl suture 3-0", mfr: "Ethicon", ref: "SUT-VIC-30", udi: "(01)00845554443330", lot: "VIC-4471", qty: 1 },
+      { name: "Gauze sponges", mfr: "Medline", ref: "CON-GAU-4", udi: "(01)00842223334440", lot: "GAU-4471", qty: 1 },
     ],
   },
   {
@@ -38,6 +41,9 @@ const forms = [
       { name: "Intraocular lens", mfr: "Alcon", ref: "IMP-IOL-21", udi: "(01)00843216549870", lot: "IOL-1120", qty: 1 },
       { name: "Orthopedic drape pack", mfr: "Medline", ref: "CON-DRP-12", udi: "(01)00847778889990", lot: "DRP-8891", qty: 1 },
       { name: "Vicryl suture 3-0", mfr: "Ethicon", ref: "SUT-VIC-30", udi: "(01)00845554443330", lot: "VIC-3300", qty: 1 },
+      { name: "Bone cement", mfr: "Stryker", ref: "CON-CEM-04", udi: "(01)00849876543210", lot: "CEM-1120", qty: 1 },
+      { name: "Sterile gloves, size 7", mfr: "Medline", ref: "PPE-GLV-7", udi: "(01)00841110002220", lot: "GLV-1120", qty: 1 },
+      { name: "Gauze sponges", mfr: "Medline", ref: "CON-GAU-4", udi: "(01)00842223334440", lot: "GAU-1120", qty: 1 },
     ],
   },
   {
@@ -49,7 +55,10 @@ const forms = [
     devices: [
       { name: "Hernia mesh 15cm", mfr: "Bard", ref: "IMP-MSH-15", udi: "(01)00841112223330", lot: "MSH-1550", qty: 1 },
       { name: "Laparoscopic clip applier", mfr: "Teleflex", ref: "CON-CLIP-2", udi: "(01)00846667778880", lot: "CLIP-0202", qty: 1 },
-      { name: "Gauze sponges", mfr: "Medline", ref: "CON-GAU-4", udi: "(01)00842223334440", lot: "GAU-4004", qty: 3 },
+      { name: "Gauze sponges", mfr: "Medline", ref: "CON-GAU-4", udi: "(01)00842223334440", lot: "GAU-4004", qty: 1 },
+      { name: "Orthopedic drape pack", mfr: "Medline", ref: "CON-DRP-12", udi: "(01)00847778889990", lot: "DRP-1550", qty: 1 },
+      { name: "Vicryl suture 3-0", mfr: "Ethicon", ref: "SUT-VIC-30", udi: "(01)00845554443330", lot: "VIC-1550", qty: 1 },
+      { name: "Sterile gloves, size 7", mfr: "Medline", ref: "PPE-GLV-7", udi: "(01)00841110002220", lot: "GLV-1550", qty: 1 },
     ],
   },
 ]
@@ -58,55 +67,65 @@ function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 }
 
-function barcode(x, y, seed) {
-  const digits = seed.replace(/\D/g, "").padEnd(24, "1")
+const STICKER_COLS = 2
+const STICKER_GAP = 16
+const STICKER_H = 180
+const MARGIN_X = 40
+const GRID_TOP = 160
+
+/** Decorative barcode: skinny bars, tight gaps, natural width (not stretched). */
+function barcode(centerX, y, seed, height) {
+  const digits = seed.replace(/\D/g, "").padEnd(16, "1").slice(0, 16)
+  const bars = [...digits].map((d) => 1.8 + (Number(d) % 3) * 0.7)
+  const gap = 1.35
+  const totalWidth = bars.reduce((sum, w) => sum + w + gap, 0) - gap
+  let cursor = centerX - totalWidth / 2
   let out = ""
-  let cursor = x
-  for (let i = 0; i < digits.length; i++) {
-    const w = 1 + (Number(digits[i]) % 3)
-    if (i % 2 === 0) out += `<rect x="${cursor}" y="${y}" width="${w}" height="34" fill="#111"/>`
-    cursor += w + 1
+  for (const w of bars) {
+    out += `<rect x="${cursor.toFixed(2)}" y="${y}" width="${w.toFixed(2)}" height="${height}" fill="#111"/>`
+    cursor += w + gap
   }
   return out
 }
 
 function sticker(d, x, y, w) {
+  const barcodeY = 58
+  const barcodeH = 72
+  const digits = d.udi.replace(/\D/g, "")
   return `
     <g transform="translate(${x} ${y})">
-      <rect x="0" y="0" width="${w}" height="120" rx="6" fill="#fffdf5" stroke="#c9c2ad" stroke-width="1.5"/>
-      <rect x="0" y="0" width="${w}" height="22" rx="6" fill="#eef1e6"/>
-      <text x="10" y="15" font-family="Helvetica, Arial" font-size="11" font-weight="bold" fill="#333">DEVICE LABEL — PEEL &amp; AFFIX</text>
-      <text x="10" y="42" font-family="Helvetica, Arial" font-size="14" font-weight="bold" fill="#111">${esc(d.name)}</text>
-      <text x="10" y="60" font-family="Helvetica, Arial" font-size="11" fill="#444">Mfr: ${esc(d.mfr)}   REF: ${esc(d.ref)}</text>
-      <text x="10" y="76" font-family="Courier, monospace" font-size="11" fill="#111">UDI ${esc(d.udi)}</text>
-      <text x="10" y="92" font-family="Courier, monospace" font-size="11" fill="#111">LOT ${esc(d.lot)}    QTY ${d.qty}</text>
-      ${barcode(10, 98, d.udi)}
-      <text x="${w - 10}" y="112" text-anchor="end" font-family="Courier, monospace" font-size="9" fill="#666">${esc(d.udi.replace(/\D/g, ""))}</text>
+      <rect x="0" y="0" width="${w}" height="${STICKER_H}" rx="8" fill="#fffdf5" stroke="#c9c2ad" stroke-width="1.5"/>
+      <text x="${w / 2}" y="36" text-anchor="middle" font-family="Helvetica, Arial" font-size="18" font-weight="bold" fill="#111">${esc(d.name)}</text>
+      ${barcode(w / 2, barcodeY, d.udi, barcodeH)}
+      <text x="${w / 2}" y="${STICKER_H - 22}" text-anchor="middle" font-family="Courier, monospace" font-size="13" fill="#444">${esc(digits)}</text>
     </g>`
 }
 
 function buildSvg(form) {
   const W = 720
   const H = 960
-  let y = 150
+  const usable = W - MARGIN_X * 2
+  const stickerW = (usable - STICKER_GAP * (STICKER_COLS - 1)) / STICKER_COLS
   const stickers = form.devices
-    .map((d) => {
-      const s = sticker(d, 40, y, W - 80)
-      y += 140
-      return s
+    .map((d, index) => {
+      const col = index % STICKER_COLS
+      const row = Math.floor(index / STICKER_COLS)
+      const x = MARGIN_X + col * (stickerW + STICKER_GAP)
+      const y = GRID_TOP + row * (STICKER_H + STICKER_GAP)
+      return sticker(d, x, y, stickerW)
     })
     .join("")
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="#ffffff"/>
   <rect x="20" y="20" width="${W - 40}" height="${H - 40}" fill="none" stroke="#999" stroke-width="1"/>
-  <text x="40" y="55" font-family="Helvetica, Arial" font-size="20" font-weight="bold" fill="#1c2b1c">Mountain Spring Podiatry</text>
-  <text x="40" y="78" font-family="Helvetica, Arial" font-size="14" fill="#444">Point-of-Use Device Compliance Form (SYNTHETIC — no PHI)</text>
-  <line x1="40" y1="92" x2="${W - 40}" y2="92" stroke="#ccc" stroke-width="1"/>
-  <text x="40" y="118" font-family="Helvetica, Arial" font-size="12" fill="#222">Center: ${esc(form.center)}      Procedure date: ${esc(form.date)}</text>
-  <text x="40" y="136" font-family="Helvetica, Arial" font-size="12" fill="#222">Patient ref: ${esc(form.patientRef)}      Form ID: ${esc(form.formId)}</text>
+  <text x="40" y="52" font-family="Helvetica, Arial" font-size="22" font-weight="bold" fill="#1c2b1c">Mountain Spring Podiatry</text>
+  <text x="40" y="76" font-family="Helvetica, Arial" font-size="15" fill="#444">Point-of-Use Device Compliance Form (SYNTHETIC — no PHI)</text>
+  <line x1="40" y1="90" x2="${W - 40}" y2="90" stroke="#ccc" stroke-width="1"/>
+  <text x="40" y="118" font-family="Helvetica, Arial" font-size="14" fill="#222">Center: ${esc(form.center)}      Procedure date: ${esc(form.date)}</text>
+  <text x="40" y="140" font-family="Helvetica, Arial" font-size="14" fill="#222">Patient ref: ${esc(form.patientRef)}      Form ID: ${esc(form.formId)}</text>
   ${stickers}
-  <text x="40" y="${H - 40}" font-family="Helvetica, Arial" font-size="10" fill="#888">Staff affix device labels above after each procedure. Scan and submit to inventory manager.</text>
+  <text x="40" y="${H - 36}" font-family="Helvetica, Arial" font-size="12" fill="#888">Staff affix device labels above after each procedure. Scan and submit to inventory manager.</text>
 </svg>`
 }
 
