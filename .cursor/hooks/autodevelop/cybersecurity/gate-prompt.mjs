@@ -3,6 +3,8 @@
  * Copyright (c) 2026 Devrecated
  */
 import { asString, collectStrings, readHookInput, writeHookOutput } from '../lib.mjs'
+import { stagePrompt } from '../../../skills/autodevelop-internal/scripts/chat-stage.mjs'
+import { workspaceRootFromHook } from '../../../skills/autodevelop-internal/scripts/config-load.mjs'
 
 const RISK =
   /(?:deploy(?:ing)?\s+prod|production\s+deploy|env:prod|deploy:prod|release:prod|release-prod|force[-\s]?push|git\s+push\s+-f|--force-with-lease|--no-verify|skip(?:ping)?\s+hooks|commit\s+\.env|check\s+in\s+\.env|record(?:ing)?\s+portal\s+videos?\s+on\s+prod)/i
@@ -17,6 +19,16 @@ try {
       collectStrings(input).find((value) => value.length > 8) ||
       '',
   )
+
+  try {
+    const root = workspaceRootFromHook(input)
+    stagePrompt(root, {
+      prompt,
+      sessionKey: String(input.conversation_id || input.session_id || input.generation_id || ''),
+    })
+  } catch {
+    /* Staging must never block the prompt. */
+  }
 
   if (!RISK.test(prompt)) {
     writeHookOutput({})
