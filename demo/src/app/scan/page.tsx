@@ -523,6 +523,14 @@ export default function ScanPage() {
             Add photos
           </Button>
 
+          <Button
+            className="min-h-11 w-full"
+            variant="outline"
+            onClick={() => router.push("/inventory")}
+          >
+            Finish session
+          </Button>
+
           {items.length > 0 ? (
             <div className="rounded-2xl border bg-card p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
@@ -569,19 +577,10 @@ export default function ScanPage() {
           ) : null}
 
           {sessionDeducted > 0 ? (
-            <div className="flex flex-col gap-3">
-              <p className="flex items-center justify-center gap-2 text-sm text-emerald-800">
-                <CheckCircle2 className="size-4" />
-                Session total: {sessionDeducted} deducted
-              </p>
-              <Button
-                className="min-h-11 w-full"
-                variant="outline"
-                onClick={() => router.push("/inventory")}
-              >
-                Finish session
-              </Button>
-            </div>
+            <p className="flex items-center justify-center gap-2 text-sm text-emerald-800">
+              <CheckCircle2 className="size-4" />
+              Session total: {sessionDeducted} deducted
+            </p>
           ) : null}
         </section>
       ) : null}
