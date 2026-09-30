@@ -297,6 +297,21 @@ export function ScanApp({ onSignedOut }: { onSignedOut: () => void }) {
     }
   }, [runExtract, syncItems])
 
+  const retryExtract = useCallback(
+    (id: string) => {
+      if (inFlightRef.current.has(id)) return
+      patchItem(id, {
+        status: "queued",
+        error: null,
+        matches: [],
+        skipped: [],
+        extraction: null,
+      })
+      pumpRef.current()
+    },
+    [patchItem],
+  )
+
   useEffect(() => {
     pumpRef.current = pumpQueue
   }, [pumpQueue])
@@ -430,6 +445,9 @@ export function ScanApp({ onSignedOut }: { onSignedOut: () => void }) {
     (item) => item.status === "queued" || item.status === "extracting",
   ).length
   const doneCount = items.filter((item) => item.status === "done").length
+  const extractFailedCount = items.filter(
+    (item) => item.status === "error" || (item.status === "ready" && item.matches.length === 0),
+  ).length
   const scannedCount = items.length
   const canReview = reviewable.length > 0 && processing === 0
   const suppliesHref = `${hostUrl()}/inventory`
@@ -531,15 +549,41 @@ export function ScanApp({ onSignedOut }: { onSignedOut: () => void }) {
                 <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
                   Queue
                 </p>
-                {doneCount > 0 ? (
-                  <button type="button" className="text-xs text-muted-foreground underline" onClick={clearDone}>
-                    Clear done
-                  </button>
-                ) : null}
+                <div className="flex items-center gap-3">
+                  {extractFailedCount > 0 ? (
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-amber-900 underline"
+                      onClick={() => {
+                        for (const item of itemsRef.current) {
+                          if (
+                            item.status === "error" ||
+                            (item.status === "ready" && item.matches.length === 0)
+                          ) {
+                            retryExtract(item.id)
+                          }
+                        }
+                      }}
+                    >
+                      Retry failed ({extractFailedCount})
+                    </button>
+                  ) : null}
+                  {doneCount > 0 ? (
+                    <button type="button" className="text-xs text-muted-foreground underline" onClick={clearDone}>
+                      Clear done
+                    </button>
+                  ) : null}
+                </div>
               </div>
               <ul className="max-h-48 space-y-2 overflow-y-auto">
                 {items.map((item, index) => (
-                  <QueueRow key={item.id} index={index + 1} item={item} onRemove={() => removeItem(item.id)} />
+                  <QueueRow
+                    key={item.id}
+                    index={index + 1}
+                    item={item}
+                    onRemove={() => removeItem(item.id)}
+                    onRetry={() => retryExtract(item.id)}
+                  />
                 ))}
               </ul>
             </div>
@@ -598,7 +642,9 @@ export function ScanApp({ onSignedOut }: { onSignedOut: () => void }) {
                         Form {index + 1}
                         {item.status === "error"
                           ? " · extract failed"
-                          : ` · ${item.matches.length} matched`}
+                          : item.matches.length === 0
+                            ? " · no matches"
+                            : ` · ${item.matches.length} matched`}
                         {item.skipped.length ? ` · ${item.skipped.length} skipped` : ""}
                       </p>
                       {item.error ? <p className="mt-1 text-xs text-amber-800">{item.error}</p> : null}
@@ -626,28 +672,20 @@ export function ScanApp({ onSignedOut }: { onSignedOut: () => void }) {
                       <X className="size-4" />
                     </button>
                   </div>
-                  {item.status === "error" ? (
+                  {item.status === "error" || item.matches.length === 0 ? (
                     <Button
                       className="mt-3 min-h-11 w-full"
                       variant="outline"
-                      onClick={() => {
-                        patchItem(item.id, {
-                          status: "queued",
-                          error: null,
-                          matches: [],
-                          skipped: [],
-                          extraction: null,
-                        })
-                        pumpRef.current()
-                      }}
+                      onClick={() => retryExtract(item.id)}
                     >
+                      <RotateCcw className="mr-2 size-4" />
                       Retry extract
                     </Button>
                   ) : (
                     <Button
                       className="mt-3 min-h-11 w-full"
                       variant="outline"
-                      disabled={item.matches.length === 0 || item.status === "confirming"}
+                      disabled={item.status === "confirming"}
                       onClick={() => void confirmItem(item.id)}
                     >
                       Deduct this form
@@ -686,23 +724,29 @@ function QueueRow({
   item,
   index,
   onRemove,
+  onRetry,
 }: {
   item: QueueItem
   index: number
   onRemove: () => void
+  onRetry: () => void
 }) {
+  const canRetry =
+    item.status === "error" || (item.status === "ready" && item.matches.length === 0)
   const label =
     item.status === "queued"
       ? "Queued"
       : item.status === "extracting"
         ? "Extracting…"
         : item.status === "ready"
-          ? "Ready for review"
+          ? item.matches.length === 0
+            ? "No matches"
+            : "Ready for review"
           : item.status === "confirming"
             ? "Deducting…"
             : item.status === "done"
               ? "Deducted"
-              : "Error"
+              : "Extract failed"
 
   return (
     <li className="flex items-center gap-2 text-sm">
@@ -718,19 +762,32 @@ function QueueRow({
             ? ` · ${item.matches.length} item${item.matches.length === 1 ? "" : "s"}`
             : ""}
         </p>
-        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className={`text-xs ${canRetry ? "text-amber-800" : "text-muted-foreground"}`}>
+          {canRetry && item.error ? item.error : label}
+        </p>
       </div>
       {item.status === "extracting" || item.status === "confirming" ? (
         <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
       ) : (
-        <button
-          type="button"
-          className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
-          aria-label="Remove"
-          onClick={onRemove}
-        >
-          <X className="size-4" />
-        </button>
+        <div className="flex shrink-0 items-center">
+          {canRetry ? (
+            <button
+              type="button"
+              className="rounded-lg px-2 py-1.5 text-xs font-medium text-amber-950 hover:bg-amber-50"
+              onClick={onRetry}
+            >
+              Retry
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
+            aria-label="Remove"
+            onClick={onRemove}
+          >
+            <X className="size-4" />
+          </button>
+        </div>
       )}
     </li>
   )

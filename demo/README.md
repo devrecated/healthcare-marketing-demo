@@ -8,7 +8,7 @@ Cross-device demo uses Supabase for shared `supplies` + `usage_log`.
 - Only upload **synthetic or fully redacted** forms.
 - An AI Studio API key is **not BAA-covered**. Never send real patient forms.
 - Extractor runs **server-side on the host** (`OPENROUTER_API_KEY` / `GEMINI_API_KEY` never ship to the browser).
-- Image extract prefers **OpenRouter** when configured; Gemini remains a fallback (and for PDFs).
+- Image extract uses **OpenRouter** when configured (no Gemini fallback); Gemini is for PDFs or when OpenRouter is unset.
 
 ## Apps
 
