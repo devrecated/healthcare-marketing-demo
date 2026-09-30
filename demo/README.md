@@ -1,50 +1,58 @@
 # Wardline / Acme Healthcare inventory scan demo
 
-Next.js App Router demo: mock Point-of-Use forms → Gemini extract → inventory deduct.
+Next.js App Router **host** console + Vite **scan microfrontend** (`../scan-mfe`).
 Cross-device demo uses Supabase for shared `supplies` + `usage_log`.
 
 ## SANITIZED DATA ONLY — no PHI until Vertex + BAA
 
 - Only upload **synthetic or fully redacted** forms.
 - An AI Studio API key is **not BAA-covered**. Never send real patient forms.
-- Extractor runs **server-side** (`OPENROUTER_API_KEY` / `GEMINI_API_KEY` never ship to the browser).
+- Extractor runs **server-side on the host** (`OPENROUTER_API_KEY` / `GEMINI_API_KEY` never ship to the browser).
 - Image extract prefers **OpenRouter** when configured; Gemini remains a fallback (and for PDFs).
-- Phone path: one-tap **Confirm & deduct** after extract (matched SKUs only).
 
-## Setup
+## Apps
+
+| App | Path | Dev |
+|-----|------|-----|
+| Host console | `demo/` | `pnpm dev` → :3000 |
+| Scan MFE | `scan-mfe/` | `pnpm dev` → :5173 |
+
+## Host setup
 
 1. `pnpm install` in `demo/`.
-2. Copy `.env.example` → `.env.local` and fill:
-   - `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` (preferred for camera/image extract)
-   - `GEMINI_API_KEY` / optional `GEMINI_MODEL` (fallback; needed for PDF uploads)
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` (server only — never `NEXT_PUBLIC_`)
-3. In the Supabase SQL editor, run
-   [`supabase/migrations/20260930120000_scan_inventory.sql`](supabase/migrations/20260930120000_scan_inventory.sql)
-   (creates tables, RLS read policies, `confirm_scan_deduction` RPC, seed rows).
-4. In Supabase → Database → Replication, ensure `supplies` is enabled for Realtime
-   (migration tries to add it to `supabase_realtime`).
-5. `pnpm dev` — open [http://localhost:3000](http://localhost:3000) (login password `wardline`).
+2. Copy `.env.example` → `.env.local` and fill OpenRouter/Gemini, Supabase, and:
+   - `NEXT_PUBLIC_SCAN_MFE_URL=http://localhost:5173`
+3. Run the Supabase migration
+   [`supabase/migrations/20260930120000_scan_inventory.sql`](supabase/migrations/20260930120000_scan_inventory.sql).
+4. Ensure `supplies` (and ideally `usage_log`) are in the Realtime publication.
+5. `pnpm dev` — [http://localhost:3000](http://localhost:3000) (password `wardline`).
 
-Camera capture needs **HTTPS** (or `localhost`). For a phone on the LAN, use a tunnel
-(e.g. Cloudflare Tunnel / ngrok) to the Next server.
+## Scan MFE setup
 
-## Routes
+1. `pnpm install` in `scan-mfe/`.
+2. Copy `scan-mfe/.env.example` → `.env.local` (`VITE_API_BASE`, `VITE_HOST_URL`, Supabase anon).
+3. `pnpm dev` — [http://localhost:5173](http://localhost:5173) (password `wardline`).
 
-| Path | Role |
-|------|------|
-| `/scan` | Camera microfrontend — capture → extract → Confirm & deduct |
-| `/inventory` | Supplies (live from Supabase) |
-| `/inventory/usage` | Usage log (live from Supabase) |
-| `/inventory/intake` | Mock form generator / file upload spike (local approve still available) |
+Host sidebar / Mock forms / Usage log open the MFE URL. `/scan` on the host redirects there.
 
 ## Cross-device demo
 
-1. Laptop: open `/inventory` (quantities load from Supabase).
-2. Print a mock form from `/inventory/intake` (**Use this form** / **Generate random mock**).
-3. Phone: same origin `/scan` → photograph the printout → review matches → **Confirm & deduct**.
-4. Laptop Supplies quantities drop via Realtime (or refresh).
+1. Laptop: host `/inventory`.
+2. Print a mock form from `/inventory/intake`.
+3. Phone: open the scan MFE URL → capture → review → **Confirm & deduct**.
+4. Laptop Supplies updates via Realtime.
+
+Camera capture needs **HTTPS** (or `localhost`). Tunnel both apps (or at least the host APIs)
+when using a physical phone.
+
+## Routes (host)
+
+| Path | Role |
+|------|------|
+| `/scan` | Redirects to `NEXT_PUBLIC_SCAN_MFE_URL` |
+| `/inventory` | Supplies (live from Supabase) |
+| `/inventory/usage` | Usage log |
+| `/inventory/intake` | Mock form generator / file upload spike |
 
 ## Fixtures & eval
 
@@ -56,4 +64,4 @@ Camera capture needs **HTTPS** (or `localhost`). For a phone on the LAN, use a t
 ## Out of scope
 
 Athena/billing, coding AI, call-center voice, live Drive/Sheets, Document AI trainer,
-Module Federation / separate MFE deploy, Vertex PHI path.
+Module Federation embed into the host chrome, Vertex PHI path.

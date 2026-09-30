@@ -20,18 +20,19 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { MOCK_USER } from "@/lib/session"
+import { getScanMfeUrl } from "@/lib/scan-mfe"
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/patients", label: "Patients", icon: Users },
   { href: "/appointments", label: "Appointments", icon: CalendarClock },
   { href: "/inventory", label: "Supplies", icon: Package },
-  { href: "/scan", label: "Scan camera", icon: ScanLine },
+  { href: getScanMfeUrl(), label: "Scan camera", icon: ScanLine, external: true },
   { href: "/inventory/intake", label: "Mock forms", icon: FileImage },
   { href: "/inventory/usage", label: "Usage log", icon: ClipboardList },
   { href: "/surgery-costs", label: "Surgery costs", icon: Scissors },
   { href: "/risk-predictor", label: "Risk predictor", icon: Activity },
-]
+] as const
 
 export function SidebarNav({
   collapsed,
@@ -45,27 +46,44 @@ export function SidebarNav({
   return (
     <nav className="flex flex-col gap-1 px-2">
       {links.map((link) => {
+        const external = "external" in link && link.external
         // Prefer the longest matching href so /inventory does not stay active on
         // /inventory/usage, /inventory/intake, etc.
-        const matches = links.filter((candidate) =>
-          candidate.href === "/"
+        const matches = links.filter((candidate) => {
+          if ("external" in candidate && candidate.external) return false
+          return candidate.href === "/"
             ? pathname === "/"
-            : pathname === candidate.href || pathname.startsWith(`${candidate.href}/`),
-        )
+            : pathname === candidate.href || pathname.startsWith(`${candidate.href}/`)
+        })
         const best = matches.sort((a, b) => b.href.length - a.href.length)[0]
-        const active = best?.href === link.href
+        const active = !external && best?.href === link.href
         const Icon = link.icon
+        const className = cn(
+          "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          collapsed && "justify-center px-0",
+          active && "bg-sidebar-accent text-sidebar-accent-foreground",
+        )
+        if (external) {
+          return (
+            <a
+              key={link.href}
+              href={link.href}
+              title={link.label}
+              onClick={onNavigate}
+              className={className}
+            >
+              <Icon className="size-4 shrink-0" />
+              {collapsed ? <span className="sr-only">{link.label}</span> : link.label}
+            </a>
+          )
+        }
         return (
           <Link
             key={link.href}
             href={link.href}
             title={link.label}
             onClick={onNavigate}
-            className={cn(
-              "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              collapsed && "justify-center px-0",
-              active && "bg-sidebar-accent text-sidebar-accent-foreground",
-            )}
+            className={className}
           >
             <Icon className="size-4 shrink-0" />
             {collapsed ? <span className="sr-only">{link.label}</span> : link.label}
