@@ -20,9 +20,8 @@ import { isSignedIn } from "@/lib/session"
 import { createBrowserSupabase, isSupabaseConfigured, mapSupply, type DbSupply } from "@/lib/supabase"
 import type { Supply } from "@/lib/types"
 
-const HIGH_CONFIDENCE = 0.8
-const AUTO_CONFIRM_MS = 2500
 const MAX_PARALLEL_EXTRACT = 2
+const EXTRACT_TIMEOUT_MS = 90_000
 
 type MatchedRow = {
   productName: string
@@ -40,27 +39,15 @@ type QueueItem = {
   id: string
   file: File
   previewUrl: string | null
-  status: "queued" | "extracting" | "ready" | "needs_review" | "confirming" | "done" | "error"
+  status: "queued" | "extracting" | "ready" | "confirming" | "done" | "error"
   extraction: Extraction | null
   matches: MatchedRow[]
   skipped: string[]
   error: string | null
   deducted: DeductedRow[]
-  autoConfirmed: boolean
 }
 
 type View = "scan" | "review"
-
-function isAutoConfirmable(item: Pick<QueueItem, "matches" | "skipped" | "extraction">) {
-  if (item.matches.length === 0) return false
-  if (item.skipped.length > 0) return false
-  if ((item.extraction?.uncertain?.length ?? 0) > 0) return false
-  return item.matches.every(
-    (row) =>
-      row.confidence >= HIGH_CONFIDENCE &&
-      (row.matchMethod === "sku" || row.matchScore >= 0.7),
-  )
-}
 
 export default function ScanPage() {
   const router = useRouter()
@@ -69,13 +56,9 @@ export default function ScanPage() {
   const multiFileRef = useRef<HTMLInputElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const itemsRef = useRef<QueueItem[]>([])
-  const extractingCountRef = useRef(0)
-  const autoTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const inFlightRef = useRef(new Set<string>())
   const suppliesRef = useRef<Supply[]>([])
   const pumpRef = useRef<() => void>(() => undefined)
-  const confirmRef = useRef<(id: string, opts?: { auto?: boolean }) => Promise<boolean>>(
-    async () => false,
-  )
 
   const [auth, setAuth] = useState<"unknown" | "in" | "out">("unknown")
   const [view, setView] = useState<View>("scan")
@@ -95,12 +78,9 @@ export default function ScanPage() {
   }, [])
 
   const patchItem = useCallback(
-    (id: string, patch: Partial<QueueItem> | ((item: QueueItem) => QueueItem)) => {
+    (id: string, patch: Partial<QueueItem>) => {
       syncItems((prev) =>
-        prev.map((item) => {
-          if (item.id !== id) return item
-          return typeof patch === "function" ? patch(item) : { ...item, ...patch }
-        }),
+        prev.map((item) => (item.id === id ? { ...item, ...patch } : item)),
       )
     },
     [syncItems],
@@ -131,7 +111,7 @@ export default function ScanPage() {
     })()
   }, [])
 
-  // Keep camera warm for the whole signed-in session (not torn down between captures).
+  // Keep camera warm for the whole signed-in session.
   useEffect(() => {
     if (auth !== "in") return
     let cancelled = false
@@ -170,8 +150,6 @@ export default function ScanPage() {
       cancelled = true
       streamRef.current?.getTracks().forEach((track) => track.stop())
       streamRef.current = null
-      for (const timer of autoTimersRef.current.values()) clearTimeout(timer)
-      autoTimersRef.current.clear()
     }
   }, [auth])
 
@@ -184,18 +162,12 @@ export default function ScanPage() {
   }, [auth, view])
 
   const confirmItem = useCallback(
-    async (id: string, opts?: { auto?: boolean }): Promise<boolean> => {
+    async (id: string): Promise<boolean> => {
       const item = itemsRef.current.find((row) => row.id === id)
       if (!item || item.matches.length === 0 || !item.extraction) return false
       if (item.status === "done" || item.status === "confirming") return false
 
-      const timer = autoTimersRef.current.get(id)
-      if (timer) {
-        clearTimeout(timer)
-        autoTimersRef.current.delete(id)
-      }
-
-      patchItem(id, { status: "confirming" })
+      patchItem(id, { status: "confirming", error: null })
       try {
         const res = await fetch("/api/scan/confirm", {
           method: "POST",
@@ -220,59 +192,15 @@ export default function ScanPage() {
           sku: row.sku ?? "",
           qty: row.qty ?? 1,
         }))
-        patchItem(id, {
-          status: "done",
-          deducted,
-          autoConfirmed: Boolean(opts?.auto),
-        })
+        patchItem(id, { status: "done", deducted })
         setSessionDeducted((n) => n + deducted.length)
-        if (opts?.auto) {
-          toast.success(`Auto-deducted ${deducted.length} item${deducted.length === 1 ? "" : "s"}`)
-        }
         return true
       } catch (caught) {
         const message = caught instanceof Error ? caught.message : "Confirm failed"
-        patchItem(id, { status: "needs_review", error: message })
+        patchItem(id, { status: "ready", error: message })
         toast.error(message)
         return false
       }
-    },
-    [patchItem],
-  )
-
-  useEffect(() => {
-    confirmRef.current = confirmItem
-  }, [confirmItem])
-
-  const scheduleAutoConfirm = useCallback(
-    (id: string, matchCount: number) => {
-      const existing = autoTimersRef.current.get(id)
-      if (existing) clearTimeout(existing)
-
-      const toastId = `auto-${id}`
-      toast(`Auto-confirming ${matchCount} item${matchCount === 1 ? "" : "s"}…`, {
-        id: toastId,
-        duration: AUTO_CONFIRM_MS,
-        action: {
-          label: "Undo",
-          onClick: () => {
-            const timer = autoTimersRef.current.get(id)
-            if (timer) {
-              clearTimeout(timer)
-              autoTimersRef.current.delete(id)
-            }
-            patchItem(id, { status: "needs_review" })
-            toast.message("Held for review")
-          },
-        },
-      })
-
-      const timer = setTimeout(() => {
-        autoTimersRef.current.delete(id)
-        toast.dismiss(toastId)
-        void confirmRef.current(id, { auto: true })
-      }, AUTO_CONFIRM_MS)
-      autoTimersRef.current.set(id, timer)
     },
     [patchItem],
   )
@@ -281,17 +209,23 @@ export default function ScanPage() {
     async (id: string) => {
       const item = itemsRef.current.find((row) => row.id === id)
       if (!item) {
-        extractingCountRef.current = Math.max(0, extractingCountRef.current - 1)
+        inFlightRef.current.delete(id)
         pumpRef.current()
         return
       }
 
-      patchItem(id, { status: "extracting", error: null })
+      const controller = new AbortController()
+      const timer = window.setTimeout(() => controller.abort(), EXTRACT_TIMEOUT_MS)
+
       try {
         const body = new FormData()
         body.append("file", item.file)
-        const res = await fetch("/api/extract", { method: "POST", body })
-        const data: unknown = await res.json()
+        const res = await fetch("/api/extract", {
+          method: "POST",
+          body,
+          signal: controller.signal,
+        })
+        const data: unknown = await res.json().catch(() => ({}))
         if (!res.ok) {
           throw new Error((data as { error?: string }).error ?? `Extract failed (${res.status})`)
         }
@@ -325,56 +259,50 @@ export default function ScanPage() {
           })
         }
 
-        const nextPartial: Partial<QueueItem> = {
+        patchItem(id, {
+          status: "ready",
           extraction,
           matches: matched,
           skipped: miss,
-        }
-
-        if (matched.length === 0) {
-          patchItem(id, {
-            ...nextPartial,
-            status: "needs_review",
-            error: "No devices matched inventory",
-          })
-          toast.error("No devices matched — held for review")
-          return
-        }
-
-        const draft = { matches: matched, skipped: miss, extraction }
-        if (isAutoConfirmable(draft)) {
-          patchItem(id, { ...nextPartial, status: "ready" })
-          scheduleAutoConfirm(id, matched.length)
-        } else {
-          patchItem(id, { ...nextPartial, status: "needs_review" })
-          toast.message("Needs review", {
-            description: `${matched.length} matched${miss.length ? `, ${miss.length} skipped` : ""}`,
-          })
-        }
+          error: matched.length === 0 ? "No devices matched inventory" : null,
+        })
       } catch (caught) {
-        const message = caught instanceof Error ? caught.message : "Extraction failed"
+        const message =
+          caught instanceof Error && caught.name === "AbortError"
+            ? "Extraction timed out"
+            : caught instanceof Error
+              ? caught.message
+              : "Extraction failed"
         patchItem(id, { status: "error", error: message })
         toast.error(message)
       } finally {
-        extractingCountRef.current = Math.max(0, extractingCountRef.current - 1)
+        window.clearTimeout(timer)
+        inFlightRef.current.delete(id)
         pumpRef.current()
       }
     },
-    [patchItem, scheduleAutoConfirm],
+    [patchItem],
   )
 
   const pumpQueue = useCallback(() => {
-    while (extractingCountRef.current < MAX_PARALLEL_EXTRACT) {
-      const next = itemsRef.current.find((item) => item.status === "queued")
-      if (!next) break
-      extractingCountRef.current += 1
-      itemsRef.current = itemsRef.current.map((item) =>
-        item.id === next.id ? { ...item, status: "extracting" as const } : item,
+    while (inFlightRef.current.size < MAX_PARALLEL_EXTRACT) {
+      const next = itemsRef.current.find(
+        (item) => item.status === "queued" && !inFlightRef.current.has(item.id),
       )
-      setItems(itemsRef.current)
+      if (!next) break
+
+      inFlightRef.current.add(next.id)
+      // Functional update only — avoids racing a concrete setItems overwrite.
+      syncItems((prev) => {
+        const mapped = prev.map((item) =>
+          item.id === next.id ? { ...item, status: "extracting" as const, error: null } : item,
+        )
+        itemsRef.current = mapped
+        return mapped
+      })
       void runExtract(next.id)
     }
-  }, [runExtract])
+  }, [runExtract, syncItems])
 
   useEffect(() => {
     pumpRef.current = pumpQueue
@@ -393,15 +321,13 @@ export default function ScanPage() {
         skipped: [],
         error: null,
         deducted: [],
-        autoConfirmed: false,
       }))
       syncItems((prev) => {
-        const next = [...created, ...prev]
+        const next = [...prev, ...created]
         itemsRef.current = next
-        queueMicrotask(() => pumpRef.current())
         return next
       })
-      toast.message(files.length === 1 ? "Form queued" : `${files.length} forms queued`)
+      queueMicrotask(() => pumpRef.current())
     },
     [syncItems],
   )
@@ -440,16 +366,13 @@ export default function ScanPage() {
   }
 
   function removeItem(id: string) {
-    const timer = autoTimersRef.current.get(id)
-    if (timer) {
-      clearTimeout(timer)
-      autoTimersRef.current.delete(id)
-    }
+    inFlightRef.current.delete(id)
     syncItems((prev) => {
       const target = prev.find((item) => item.id === id)
       if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
       return prev.filter((item) => item.id !== id)
     })
+    queueMicrotask(() => pumpRef.current())
   }
 
   function clearDone() {
@@ -463,8 +386,7 @@ export default function ScanPage() {
 
   async function confirmAllPending() {
     const pending = itemsRef.current.filter(
-      (item) =>
-        (item.status === "ready" || item.status === "needs_review") && item.matches.length > 0,
+      (item) => item.status === "ready" && item.matches.length > 0,
     )
     if (pending.length === 0) {
       toast.message("Nothing to deduct")
@@ -473,11 +395,6 @@ export default function ScanPage() {
     setBatchConfirming(true)
     let ok = 0
     for (const item of pending) {
-      const timer = autoTimersRef.current.get(item.id)
-      if (timer) {
-        clearTimeout(timer)
-        autoTimersRef.current.delete(item.id)
-      }
       if (await confirmItem(item.id)) ok += 1
     }
     setBatchConfirming(false)
@@ -487,15 +404,14 @@ export default function ScanPage() {
     }
   }
 
-  const pendingReview = items.filter(
-    (item) => item.status === "needs_review" || item.status === "ready",
-  )
-  const pendingCount = pendingReview.reduce((sum, item) => sum + item.matches.length, 0)
+  const reviewable = items.filter((item) => item.status === "ready" || item.status === "error")
+  const reviewMatchCount = reviewable.reduce((sum, item) => sum + item.matches.length, 0)
   const processing = items.filter(
-    (item) => item.status === "queued" || item.status === "extracting" || item.status === "confirming",
+    (item) => item.status === "queued" || item.status === "extracting",
   ).length
   const doneCount = items.filter((item) => item.status === "done").length
   const scannedCount = items.length
+  const canReview = reviewable.length > 0 && processing === 0
 
   if (auth !== "in") {
     return <div className="min-h-dvh bg-background" />
@@ -525,8 +441,8 @@ export default function ScanPage() {
       {scannedCount > 0 || sessionDeducted > 0 ? (
         <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
           <span className="rounded-full border bg-card px-3 py-1 font-medium">
-            {doneCount}/{scannedCount} forms
-            {processing > 0 ? ` · ${processing} working` : ""}
+            {reviewable.length + doneCount}/{scannedCount} ready
+            {processing > 0 ? ` · ${processing} extracting` : ""}
           </span>
           {sessionDeducted > 0 ? (
             <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 font-medium text-emerald-950">
@@ -536,7 +452,6 @@ export default function ScanPage() {
         </div>
       ) : null}
 
-      {/* Single video stays mounted so the stream never restarts between captures/review. */}
       <div
         className={
           view === "scan"
@@ -608,21 +523,31 @@ export default function ScanPage() {
                 ) : null}
               </div>
               <ul className="max-h-48 space-y-2 overflow-y-auto">
-                {items.map((item) => (
-                  <QueueRow key={item.id} item={item} onRemove={() => removeItem(item.id)} />
+                {items.map((item, index) => (
+                  <QueueRow
+                    key={item.id}
+                    index={index + 1}
+                    item={item}
+                    onRemove={() => removeItem(item.id)}
+                  />
                 ))}
               </ul>
             </div>
           ) : (
             <p className="text-center text-sm text-muted-foreground">
-              Keep capturing — high-confidence forms deduct automatically. Uncertain ones wait in
-              review.
+              Capture every form first. When you&apos;re done, review matches and deduct once.
             </p>
           )}
 
-          {pendingCount > 0 ? (
-            <Button className="min-h-12 w-full text-base" onClick={() => setView("review")}>
-              Review & deduct ({pendingCount})
+          {scannedCount > 0 ? (
+            <Button
+              className="min-h-12 w-full text-base"
+              disabled={!canReview}
+              onClick={() => setView("review")}
+            >
+              {processing > 0
+                ? `Extracting ${processing}…`
+                : `Done capturing — review (${reviewable.length})`}
             </Button>
           ) : null}
 
@@ -638,17 +563,17 @@ export default function ScanPage() {
       {view === "review" ? (
         <section className="flex flex-1 flex-col gap-4">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="font-heading text-2xl tracking-tight">Review queue</h2>
+            <h2 className="font-heading text-2xl tracking-tight">Review forms</h2>
             <Button variant="outline" className="min-h-11" onClick={() => setView("scan")}>
               Back to camera
             </Button>
           </div>
 
-          {pendingReview.length === 0 ? (
+          {reviewable.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nothing waiting. Keep scanning.</p>
           ) : (
             <ul className="space-y-3">
-              {pendingReview.map((item) => (
+              {reviewable.map((item, index) => (
                 <li key={item.id} className="rounded-2xl border bg-card p-4">
                   <div className="flex gap-3">
                     {item.previewUrl ? (
@@ -660,14 +585,17 @@ export default function ScanPage() {
                     ) : null}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">
-                        {item.matches.length} matched
+                        Form {index + 1}
+                        {item.status === "error"
+                          ? " · extract failed"
+                          : ` · ${item.matches.length} matched`}
                         {item.skipped.length ? ` · ${item.skipped.length} skipped` : ""}
                       </p>
                       {item.error ? <p className="mt-1 text-xs text-amber-800">{item.error}</p> : null}
                       <ul className="mt-2 space-y-1 text-sm">
                         {item.matches.map((row) => (
                           <li
-                            key={`${item.id}-${row.supplyId}-${row.sku}`}
+                            key={`${item.id}-${row.supplyId}-${row.sku}-${row.raw.raw_sticker_text.slice(0, 12)}`}
                             className="flex justify-between gap-2"
                           >
                             <span className="truncate">{row.productName}</span>
@@ -690,14 +618,33 @@ export default function ScanPage() {
                       <X className="size-4" />
                     </button>
                   </div>
-                  <Button
-                    className="mt-3 min-h-11 w-full"
-                    variant="outline"
-                    disabled={item.matches.length === 0 || item.status === "confirming"}
-                    onClick={() => void confirmItem(item.id)}
-                  >
-                    Deduct this form
-                  </Button>
+                  {item.status === "error" ? (
+                    <Button
+                      className="mt-3 min-h-11 w-full"
+                      variant="outline"
+                      onClick={() => {
+                        patchItem(item.id, {
+                          status: "queued",
+                          error: null,
+                          matches: [],
+                          skipped: [],
+                          extraction: null,
+                        })
+                        queueMicrotask(() => pumpRef.current())
+                      }}
+                    >
+                      Retry extract
+                    </Button>
+                  ) : (
+                    <Button
+                      className="mt-3 min-h-11 w-full"
+                      variant="outline"
+                      disabled={item.matches.length === 0 || item.status === "confirming"}
+                      onClick={() => void confirmItem(item.id)}
+                    >
+                      Deduct this form
+                    </Button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -705,7 +652,7 @@ export default function ScanPage() {
 
           <Button
             className="min-h-12 w-full text-base"
-            disabled={pendingCount === 0 || batchConfirming}
+            disabled={reviewMatchCount === 0 || batchConfirming}
             onClick={() => void confirmAllPending()}
           >
             {batchConfirming ? (
@@ -714,12 +661,12 @@ export default function ScanPage() {
                 Deducting…
               </>
             ) : (
-              `Confirm & deduct all (${pendingCount})`
+              `Confirm & deduct all (${reviewMatchCount})`
             )}
           </Button>
           <Button className="min-h-11 w-full" variant="outline" onClick={() => setView("scan")}>
             <RotateCcw className="mr-2 size-4" />
-            Keep scanning
+            Capture more
           </Button>
         </section>
       ) : null}
@@ -727,23 +674,27 @@ export default function ScanPage() {
   )
 }
 
-function QueueRow({ item, onRemove }: { item: QueueItem; onRemove: () => void }) {
+function QueueRow({
+  item,
+  index,
+  onRemove,
+}: {
+  item: QueueItem
+  index: number
+  onRemove: () => void
+}) {
   const label =
     item.status === "queued"
       ? "Queued"
       : item.status === "extracting"
         ? "Extracting…"
         : item.status === "ready"
-          ? "Auto-confirming…"
-          : item.status === "needs_review"
-            ? "Needs review"
-            : item.status === "confirming"
-              ? "Deducting…"
-              : item.status === "done"
-                ? item.autoConfirmed
-                  ? "Auto-deducted"
-                  : "Deducted"
-                : "Error"
+          ? "Ready for review"
+          : item.status === "confirming"
+            ? "Deducting…"
+            : item.status === "done"
+              ? "Deducted"
+              : "Error"
 
   return (
     <li className="flex items-center gap-2 text-sm">
@@ -754,9 +705,10 @@ function QueueRow({ item, onRemove }: { item: QueueItem; onRemove: () => void })
       )}
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">
+          Form {index}
           {item.matches.length > 0
-            ? `${item.matches.length} item${item.matches.length === 1 ? "" : "s"}`
-            : item.file.name}
+            ? ` · ${item.matches.length} item${item.matches.length === 1 ? "" : "s"}`
+            : ""}
         </p>
         <p className="text-xs text-muted-foreground">{label}</p>
       </div>
