@@ -7,8 +7,8 @@ import { DataTable, type AppColumn } from "@/components/console/data-table"
 import { PageIntro, StatCard } from "@/components/console/stat-card"
 import { Reveal } from "@/components/console/reveal"
 import { Button } from "@/components/ui/button"
+import { useLiveUsageLog } from "@/hooks/use-live-inventory"
 import { formatWhen } from "@/lib/money"
-import { useStore } from "@/lib/store"
 import type { UsageLogEntry } from "@/lib/types"
 
 function csvCell(value: string | number | null): string {
@@ -17,7 +17,7 @@ function csvCell(value: string | number | null): string {
 }
 
 export default function UsageLogPage() {
-  const { usageLog } = useStore()
+  const { data: usageLog, loading, error } = useLiveUsageLog()
 
   const totalQty = usageLog.reduce((sum, entry) => sum + entry.qty, 0)
   const distinctForms = new Set(usageLog.map((entry) => entry.formId ?? "")).size
@@ -65,10 +65,10 @@ export default function UsageLogPage() {
       <PageIntro eyebrow="Stores" title="Device usage log">
         <div className="flex flex-col gap-2 sm:flex-row">
           <Link
-            href="/inventory/intake"
+            href="/scan"
             className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground"
           >
-            Scan a form
+            Open scan camera
           </Link>
           <Button className="min-h-11" variant="outline" onClick={exportCsv} disabled={usageLog.length === 0}>
             Export CSV
@@ -76,18 +76,26 @@ export default function UsageLogPage() {
         </div>
       </PageIntro>
 
+      {error ? (
+        <p className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{error}</p>
+      ) : null}
+
       <Reveal>
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
-          <StatCard label="Devices recorded" value={String(usageLog.length)} tone="spruce" />
-          <StatCard label="Total quantity" value={String(totalQty)} tone="ink" />
-          <StatCard label="Forms" value={String(distinctForms)} tone="ink" />
+          <StatCard label="Devices recorded" value={loading ? "…" : String(usageLog.length)} tone="spruce" />
+          <StatCard label="Total quantity" value={loading ? "…" : String(totalQty)} tone="ink" />
+          <StatCard label="Forms" value={loading ? "…" : String(distinctForms)} tone="ink" />
         </div>
       </Reveal>
 
       <DataTable
         columns={columns}
         data={usageLog}
-        empty="No device usage recorded yet. Scan a compliance form to get started."
+        empty={
+          loading
+            ? "Loading usage log…"
+            : "No device usage recorded yet. Scan a compliance form to get started."
+        }
       />
     </div>
   )

@@ -1,83 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wardline / Acme Healthcare inventory scan demo
 
-## Getting Started
+Next.js App Router demo: mock Point-of-Use forms → Gemini extract → inventory deduct.
+Cross-device demo uses Supabase for shared `supplies` + `usage_log`.
 
-First, run the development server:
+## SANITIZED DATA ONLY — no PHI until Vertex + BAA
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Only upload **synthetic or fully redacted** forms.
+- An AI Studio API key is **not BAA-covered**. Never send real patient forms.
+- Extractor runs **server-side** (`GEMINI_API_KEY` never ships to the browser).
+- Phone path: one-tap **Confirm & deduct** after extract (matched SKUs only).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. `pnpm install` in `demo/`.
+2. Copy `.env.example` → `.env.local` and fill:
+   - `GEMINI_API_KEY` / optional `GEMINI_MODEL`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (server only — never `NEXT_PUBLIC_`)
+3. In the Supabase SQL editor, run
+   [`supabase/migrations/20260930120000_scan_inventory.sql`](supabase/migrations/20260930120000_scan_inventory.sql)
+   (creates tables, RLS read policies, `confirm_scan_deduction` RPC, seed rows).
+4. In Supabase → Database → Replication, ensure `supplies` is enabled for Realtime
+   (migration tries to add it to `supabase_realtime`).
+5. `pnpm dev` — open [http://localhost:3000](http://localhost:3000) (login password `wardline`).
 
-## Inventory Scan Spike
+Camera capture needs **HTTPS** (or `localhost`). For a phone on the LAN, use a tunnel
+(e.g. Cloudflare Tunnel / ngrok) to the Next server.
 
-A spike that turns a **scanned surgery-device compliance form** (image or PDF) into structured device
-rows via Gemini, lets a human review/edit them, and — only after approval — updates the in-app
-inventory (decrements `Supply`, appends a usage log) with a CSV export that mirrors a center sheet.
+## Routes
 
-Flow: `inventory/intake` (upload) -> `POST /api/extract` (server-side Gemini) -> review UI -> approve
--> store update + CSV. Client context: Acme Healthcare.
+| Path | Role |
+|------|------|
+| `/scan` | Camera microfrontend — capture → extract → Confirm & deduct |
+| `/inventory` | Supplies (live from Supabase) |
+| `/inventory/usage` | Usage log (live from Supabase) |
+| `/inventory/intake` | Mock form generator / file upload spike (local approve still available) |
 
-### SANITIZED DATA ONLY — no PHI until Vertex + BAA
+## Cross-device demo
 
-- Only upload **synthetic or fully redacted** forms (patient identifiers blacked out).
-- An AI Studio free/consumer API key is **not BAA-covered**. Never send real patient forms to it.
-- The production PHI path is the **same Gemini models on Vertex AI under a Cloud BAA** (Phase 6). Same
-  prompts/schemas, different client.
-- Human-in-the-loop is mandatory: **unapproved rows never touch inventory**.
-- The extractor runs **server-side** so the API key is never shipped to the browser.
+1. Laptop: open `/inventory` (quantities load from Supabase).
+2. Print a mock form from `/inventory/intake` (**Use this form** / **Generate random mock**).
+3. Phone: same origin `/scan` → photograph the printout → review matches → **Confirm & deduct**.
+4. Laptop Supplies quantities drop via Realtime (or refresh).
 
-### Setup
+## Fixtures & eval
 
-1. Add credentials to `demo/.env.local` (gitignored). It needs the AI Studio API key
-   (`GEMINI_API_KEY`) and the model id (`GEMINI_MODEL`, a current Flash multimodal model). A
-   commented template already exists in that file.
-2. `pnpm dev`, then open `/inventory/intake` and upload a fixture from `fixtures/forms/`.
+- `fixtures/forms/` — synthetic sticker sheets (UI can also generate PNGs in-browser).
+- `fixtures/golden/` — hand-labeled expected extractions.
+- `pnpm eval` — extractor vs golden set (needs `GEMINI_API_KEY`).
+- `pnpm fixtures` — regenerate SVGs (PNG convert needs `rsvg-convert` on PATH).
 
-### Fixtures & eval
+## Out of scope
 
-- `fixtures/forms/` — synthetic sticker-form images (replaceable with redacted real scans).
-- `fixtures/golden/` — hand-labeled expected extractions, one JSON per form.
-- `pnpm eval` — runs the extractor against the golden set and reports device-ID recall / name match.
-
-### Demo (Tuesday call)
-
-1. Open `/inventory/intake`, upload `fixtures/forms/form-richmond-knee.png`, click **Extract devices**.
-2. In ~a few seconds you get structured rows: 3 devices auto-matched to inventory SKUs, each with a
-   confidence badge; edit any field, toggle include, or fix a match.
-3. Click **Approve N to inventory** -> `Supply` quantities decrement and rows land in the usage log.
-4. Open `/inventory/usage` and **Export CSV** to show the center-sheet mirror.
-
-Say out loud: accuracy is an experiment (show `pnpm eval`), the weekly shelf-count still happens,
-Athena is untouched, and real patient forms require a real, custom, self-hosted, tuned model.
-
-### Out of scope (do not build here)
-
-Athena/billing integration, coding AI, call-center voice, live Google Drive/Sheets writes, and a
-Document AI custom trainer. See the tracking issue for the full phase list.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Athena/billing, coding AI, call-center voice, live Drive/Sheets, Document AI trainer,
+Module Federation / separate MFE deploy, Vertex PHI path.
