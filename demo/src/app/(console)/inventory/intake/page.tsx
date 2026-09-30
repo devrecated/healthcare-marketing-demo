@@ -18,8 +18,7 @@ import {
   MOCK_FORM_CATALOG,
   buildFormSvg,
   buildRandomFormSpec,
-  fetchMockFormFile,
-  mockPublicPath,
+  svgDataUrl,
   svgToPngFile,
 } from "@/lib/mock-forms"
 import { MOCK_USER } from "@/lib/session"
@@ -78,10 +77,14 @@ export default function IntakePage() {
     setPreviewUrl(next && next.type !== "application/pdf" ? URL.createObjectURL(next) : null)
   }
 
-  async function grabMock(fileBase: string, label: string) {
+  async function grabMock(id: string, label: string) {
+    const form = MOCK_FORM_CATALOG.find((item) => item.id === id)
+    if (!form) return
     setMockBusy(true)
     try {
-      const next = await fetchMockFormFile(fileBase)
+      // Always build from current SVG layout — static fixture PNGs may be stale
+      // when rsvg-convert is missing locally.
+      const next = await svgToPngFile(buildFormSvg(form), `${form.file}.png`)
       onPick(next)
       toast(`Loaded mock: ${label}`)
     } catch (caught) {
@@ -95,26 +98,9 @@ export default function IntakePage() {
     setMockBusy(true)
     try {
       const spec = buildRandomFormSpec(supplies)
-      const svg = buildFormSvg(spec)
-      const next = await svgToPngFile(svg, `${spec.file}.png`)
+      const next = await svgToPngFile(buildFormSvg(spec), `${spec.file}.png`)
       onPick(next)
-      toast(`Generated mock form (${spec.devices.length} devices)`)
-    } catch (caught) {
-      toast.error(caught instanceof Error ? caught.message : "Could not generate mock image")
-    } finally {
-      setMockBusy(false)
-    }
-  }
-
-  async function generateFromCatalog(id: string) {
-    const form = MOCK_FORM_CATALOG.find((item) => item.id === id)
-    if (!form) return
-    setMockBusy(true)
-    try {
-      const svg = buildFormSvg(form)
-      const next = await svgToPngFile(svg, `${form.file}.png`)
-      onPick(next)
-      toast(`Generated: ${form.label}`)
+      toast.success(`Generated mock form (${spec.devices.length} devices)`)
     } catch (caught) {
       toast.error(caught instanceof Error ? caught.message : "Could not generate mock image")
     } finally {
@@ -242,34 +228,23 @@ export default function IntakePage() {
             {MOCK_FORM_CATALOG.map((form) => (
               <article key={form.id} className="overflow-hidden rounded-xl border bg-background">
                 <img
-                  src={mockPublicPath(form.file)}
+                  src={svgDataUrl(buildFormSvg(form))}
                   alt={form.label}
-                  className="aspect-[3/4] w-full object-cover object-top"
+                  className="aspect-[3/4] w-full object-cover object-top bg-white"
                 />
                 <div className="space-y-2 p-3">
                   <p className="text-sm font-medium">{form.label}</p>
                   <p className="text-xs text-muted-foreground">
                     {form.devices.length} devices · {form.center}
                   </p>
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      className="min-h-11 w-full"
-                      size="sm"
-                      disabled={mockBusy || loading}
-                      onClick={() => grabMock(form.file, form.label)}
-                    >
-                      Grab mock image
-                    </Button>
-                    <Button
-                      className="min-h-11 w-full"
-                      size="sm"
-                      variant="outline"
-                      disabled={mockBusy || loading}
-                      onClick={() => generateFromCatalog(form.id)}
-                    >
-                      Regenerate PNG
-                    </Button>
-                  </div>
+                  <Button
+                    className="min-h-11 w-full"
+                    size="sm"
+                    disabled={mockBusy || loading}
+                    onClick={() => grabMock(form.id, form.label)}
+                  >
+                    Use this form
+                  </Button>
                 </div>
               </article>
             ))}
@@ -298,6 +273,12 @@ export default function IntakePage() {
           </Button>
         </div>
       </Reveal>
+
+      {file && previewUrl && !header ? (
+        <div className="mt-4 overflow-hidden rounded-2xl border bg-card">
+          <img src={previewUrl} alt="Selected form preview" className="mx-auto max-h-[32rem] w-auto max-w-full" />
+        </div>
+      ) : null}
 
       {error ? (
         <p className="mt-4 rounded-xl border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
