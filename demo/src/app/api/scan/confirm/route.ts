@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+import { corsPreflight, withCors } from "@/lib/cors"
 import { extractedDeviceSchema, matchDeviceToSupply } from "@/lib/extraction"
 import { newId } from "@/lib/id"
 import { createServiceSupabase, mapSupply, type DbSupply } from "@/lib/supabase"
@@ -14,6 +15,10 @@ const confirmBodySchema = z.object({
   devices: z.array(extractedDeviceSchema).min(1),
   approved_by: z.string().optional(),
 })
+
+export function OPTIONS(request: Request) {
+  return corsPreflight(request)
+}
 
 export async function POST(request: Request) {
   try {
@@ -54,9 +59,9 @@ export async function POST(request: Request) {
     }
 
     if (entries.length === 0) {
-      return NextResponse.json(
-        { error: "No devices matched inventory SKUs.", skipped },
-        { status: 422 },
+      return withCors(
+        request,
+        NextResponse.json({ error: "No devices matched inventory SKUs.", skipped }, { status: 422 }),
       )
     }
 
@@ -65,16 +70,22 @@ export async function POST(request: Request) {
     })
     if (rpcError) throw rpcError
 
-    return NextResponse.json({
-      deducted: (result as { deducted?: unknown })?.deducted ?? result,
-      skipped,
-      count: entries.length,
-    })
+    return withCors(
+      request,
+      NextResponse.json({
+        deducted: (result as { deducted?: unknown })?.deducted ?? result,
+        skipped,
+        count: entries.length,
+      }),
+    )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid confirm payload.", details: error.flatten() }, { status: 400 })
+      return withCors(
+        request,
+        NextResponse.json({ error: "Invalid confirm payload.", details: error.flatten() }, { status: 400 }),
+      )
     }
     const message = error instanceof Error ? error.message : "Confirm failed."
-    return NextResponse.json({ error: message }, { status: 500 })
+    return withCors(request, NextResponse.json({ error: message }, { status: 500 }))
   }
 }

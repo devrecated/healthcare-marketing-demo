@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useMemo } from "react"
 
 import { DataTable, type AppColumn } from "@/components/console/data-table"
@@ -9,6 +8,7 @@ import { Reveal } from "@/components/console/reveal"
 import { Button } from "@/components/ui/button"
 import { useLiveUsageLog } from "@/hooks/use-live-inventory"
 import { formatWhen } from "@/lib/money"
+import { getScanMfeUrl } from "@/lib/scan-mfe"
 import type { UsageLogEntry } from "@/lib/types"
 
 function csvCell(value: string | number | null): string {
@@ -62,12 +62,12 @@ export default function UsageLogPage() {
     <div>
       <PageIntro eyebrow="Stores" title="Device usage log">
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Link
-            href="/scan"
+          <a
+            href={getScanMfeUrl()}
             className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground"
           >
             Open scan camera
-          </Link>
+          </a>
           <Button className="min-h-11" variant="outline" onClick={exportCsv} disabled={usageLog.length === 0}>
             Export CSV
           </Button>

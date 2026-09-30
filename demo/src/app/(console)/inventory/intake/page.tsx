@@ -25,6 +25,7 @@ import {
   svgToPngFile,
 } from "@/lib/mock-forms"
 import { MOCK_USER } from "@/lib/session"
+import { getScanMfeUrl } from "@/lib/scan-mfe"
 import { useStore } from "@/lib/store"
 import type { UsageLogEntry } from "@/lib/types"
 
@@ -260,9 +261,12 @@ export default function IntakePage() {
     <div>
       <PageIntro eyebrow="Intake" title="Scan device form">
         <div className="flex flex-wrap gap-3 text-sm">
-          <Link href="/scan" className="text-muted-foreground underline-offset-4 hover:underline">
+          <a
+            href={getScanMfeUrl()}
+            className="text-muted-foreground underline-offset-4 hover:underline"
+          >
             Open scan camera
-          </Link>
+          </a>
           <Link href="/inventory/usage" className="text-muted-foreground underline-offset-4 hover:underline">
             View usage log
           </Link>
