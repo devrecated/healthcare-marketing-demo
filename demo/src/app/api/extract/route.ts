@@ -13,8 +13,8 @@ export function OPTIONS(request: Request) {
 }
 
 // POST multipart/form-data with a "file" field (image or PDF of a sanitized
-// compliance form). Returns a validated Extraction. Runs server-side so the
-// GEMINI_API_KEY never reaches the browser.
+// compliance form). Returns a validated Extraction. Runs server-side so provider
+// API keys never reach the browser.
 export async function POST(request: Request) {
   try {
     const form = await request.formData()

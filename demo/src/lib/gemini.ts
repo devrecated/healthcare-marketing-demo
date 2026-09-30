@@ -216,29 +216,26 @@ async function extractViaGemini(input: ExtractInput): Promise<Extraction> {
 }
 
 export async function extractFromMedia(input: ExtractInput): Promise<Extraction> {
-  const preferOpenRouter = Boolean(process.env.OPENROUTER_API_KEY)
+  const hasOpenRouter = Boolean(process.env.OPENROUTER_API_KEY)
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY)
 
-  // Images: OpenRouter first when configured (avoids AI Studio 503s).
+  // Images: OpenRouter only when configured (no AI Studio fallback — client retries).
   // PDFs: Gemini only (OpenRouter vision path is image data-URLs).
-  if (preferOpenRouter && input.mimeType !== "application/pdf") {
-    try {
-      return await extractViaOpenRouter(input)
-    } catch (error) {
-      if (!process.env.GEMINI_API_KEY) throw error
-      // Fall through to Gemini if OpenRouter fails and Gemini is available.
-      console.warn(
-        "[extract] OpenRouter failed, falling back to Gemini:",
-        error instanceof Error ? error.message : error,
+  if (input.mimeType === "application/pdf") {
+    if (!hasGemini) {
+      throw new Error(
+        "PDF extract requires GEMINI_API_KEY (OpenRouter path supports images only).",
       )
     }
-  }
-
-  if (process.env.GEMINI_API_KEY) {
     return extractViaGemini(input)
   }
 
-  if (preferOpenRouter) {
+  if (hasOpenRouter) {
     return extractViaOpenRouter(input)
+  }
+
+  if (hasGemini) {
+    return extractViaGemini(input)
   }
 
   throw new Error(
