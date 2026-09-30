@@ -243,7 +243,8 @@ export async function downloadFormPdf(svg: string, filename: string): Promise<vo
   const jpegBase64 = jpegDataUrl.split(",")[1] ?? ""
   const jpegBytes = Uint8Array.from(atob(jpegBase64), (c) => c.charCodeAt(0))
   const pdf = buildJpegPdf(jpegBytes, FORM_WIDTH, FORM_HEIGHT)
-  const blob = new Blob([pdf], { type: "application/pdf" })
+  const pdfBuffer = pdf.buffer.slice(pdf.byteOffset, pdf.byteOffset + pdf.byteLength) as ArrayBuffer
+  const blob = new Blob([pdfBuffer], { type: "application/pdf" })
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement("a")
   anchor.href = url
