@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { toast } from "sonner"
 
 import { type AppColumn } from "@/components/console/data-table"
 import { ControlledBadge, ExpiryBadge, StockBadge } from "@/components/console/badges"
@@ -26,6 +25,7 @@ export default function InventoryPage() {
   const router = useRouter()
   const [query, setQuery] = useState("")
   const [latestBatch, setLatestBatch] = useState<UsageLogEntry[] | null>(null)
+  const [batchExpanded, setBatchExpanded] = useState(false)
   const seenIds = useRef<Set<string> | null>(null)
   const supplyFingerprint = useRef<string>("")
 
@@ -42,7 +42,7 @@ export default function InventoryPage() {
     void refreshUsage()
   }, [supplies, refreshUsage])
 
-  // Toast + banner when new usage_log rows arrive (e.g. phone Confirm & deduct).
+  // Banner when new usage_log rows arrive (e.g. phone Confirm & deduct).
   useEffect(() => {
     if (usageLoading) return
     if (seenIds.current === null) {
@@ -53,12 +53,33 @@ export default function InventoryPage() {
     if (fresh.length === 0) return
     for (const entry of usageLog) seenIds.current.add(entry.id)
     setLatestBatch(fresh)
-    const summary = fresh.map((entry) => entry.device).join(", ")
-    toast.success(`Scan deducted ${fresh.length} item${fresh.length === 1 ? "" : "s"}`, {
-      description: summary,
-      duration: 8000,
-    })
+    setBatchExpanded(false)
   }, [usageLog, usageLoading])
+
+  const batchGroups = useMemo(() => {
+    if (!latestBatch?.length) return []
+    const bySku = new Map<string, { sku: string; device: string; qty: number; centers: Set<string> }>()
+    for (const entry of latestBatch) {
+      const key = entry.sku || entry.supplyId
+      const existing = bySku.get(key)
+      if (existing) {
+        existing.qty += entry.qty
+        if (entry.centerHint) existing.centers.add(entry.centerHint)
+      } else {
+        bySku.set(key, {
+          sku: entry.sku,
+          device: entry.device,
+          qty: entry.qty,
+          centers: new Set(entry.centerHint ? [entry.centerHint] : []),
+        })
+      }
+    }
+    return [...bySku.values()].sort((a, b) => a.device.localeCompare(b.device))
+  }, [latestBatch])
+
+  const PREVIEW_GROUPS = 5
+  const visibleGroups = batchExpanded ? batchGroups : batchGroups.slice(0, PREVIEW_GROUPS)
+  const hiddenGroupCount = Math.max(0, batchGroups.length - PREVIEW_GROUPS)
 
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -143,29 +164,48 @@ export default function InventoryPage() {
       {latestBatch && latestBatch.length > 0 ? (
         <div className="mb-4 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-950">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">
                 Just deducted from scan ({latestBatch.length} item
-                {latestBatch.length === 1 ? "" : "s"})
+                {latestBatch.length === 1 ? "" : "s"}
+                {batchGroups.length !== latestBatch.length
+                  ? ` · ${batchGroups.length} SKU${batchGroups.length === 1 ? "" : "s"}`
+                  : ""}
+                )
               </p>
               <ul className="mt-2 space-y-1 text-sm">
-                {latestBatch.map((entry) => (
-                  <li key={entry.id}>
-                    <span className="font-medium">{entry.device}</span>
-                    <span className="text-emerald-900/70">
-                      {" "}
-                      · {entry.sku}
-                      {entry.centerHint ? ` · ${entry.centerHint}` : ""}
-                    </span>
-                  </li>
-                ))}
+                {visibleGroups.map((group) => {
+                  const centers = [...group.centers]
+                  return (
+                    <li key={group.sku}>
+                      <span className="font-medium">{group.device}</span>
+                      <span className="text-emerald-900/70">
+                        {" "}
+                        ×{group.qty} · {group.sku}
+                        {centers.length === 1 ? ` · ${centers[0]}` : ""}
+                      </span>
+                    </li>
+                  )
+                })}
               </ul>
+              {hiddenGroupCount > 0 ? (
+                <button
+                  type="button"
+                  className="mt-2 text-sm font-medium text-emerald-900 underline-offset-2 hover:underline"
+                  onClick={() => setBatchExpanded((open) => !open)}
+                >
+                  {batchExpanded ? "Show less" : `Show all ${hiddenGroupCount} more`}
+                </button>
+              ) : null}
             </div>
             <Button
               className="min-h-11"
               size="sm"
               variant="outline"
-              onClick={() => setLatestBatch(null)}
+              onClick={() => {
+                setLatestBatch(null)
+                setBatchExpanded(false)
+              }}
             >
               Dismiss
             </Button>
