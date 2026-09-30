@@ -7,14 +7,16 @@ Cross-device demo uses Supabase for shared `supplies` + `usage_log`.
 
 - Only upload **synthetic or fully redacted** forms.
 - An AI Studio API key is **not BAA-covered**. Never send real patient forms.
-- Extractor runs **server-side** (`GEMINI_API_KEY` never ships to the browser).
+- Extractor runs **server-side** (`OPENROUTER_API_KEY` / `GEMINI_API_KEY` never ship to the browser).
+- Image extract prefers **OpenRouter** when configured; Gemini remains a fallback (and for PDFs).
 - Phone path: one-tap **Confirm & deduct** after extract (matched SKUs only).
 
 ## Setup
 
 1. `pnpm install` in `demo/`.
 2. Copy `.env.example` → `.env.local` and fill:
-   - `GEMINI_API_KEY` / optional `GEMINI_MODEL`
+   - `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` (preferred for camera/image extract)
+   - `GEMINI_API_KEY` / optional `GEMINI_MODEL` (fallback; needed for PDF uploads)
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` (server only — never `NEXT_PUBLIC_`)

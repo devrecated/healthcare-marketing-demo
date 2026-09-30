@@ -10,6 +10,7 @@ import { modelExtractionSchema, type Extraction } from "@/lib/extraction"
 
 // Recommended always-current Flash multimodal alias; override with GEMINI_MODEL.
 export const DEFAULT_MODEL = "gemini-flash-latest"
+export const DEFAULT_OPENROUTER_MODEL = "google/gemini-2.5-flash"
 
 export const ACCEPTED_MIME_TYPES = [
   "image/png",
@@ -83,7 +84,24 @@ Rules:
   numbers. If a value is unreadable, set it to null.
 - Add a short note to "uncertain" for anything you could not read confidently (blur, glare, handwriting,
   overlapping stickers).
-- Return ONLY JSON matching the provided schema.`
+- Return ONLY JSON matching this shape:
+{
+  "center_hint": string|null,
+  "procedure_date": "YYYY-MM-DD"|null,
+  "patient_ref": string|null,
+  "form_id": string|null,
+  "devices": [{
+    "raw_sticker_text": string,
+    "product_name": string|null,
+    "manufacturer": string|null,
+    "ref": string|null,
+    "udi_or_barcode": string|null,
+    "lot": string|null,
+    "qty": number,
+    "confidence": number
+  }],
+  "uncertain": string[]
+}`
 
 export type ExtractInput = {
   base64: string
@@ -93,7 +111,82 @@ export type ExtractInput = {
   knownBarcodes?: string[]
 }
 
-export async function extractFromMedia(input: ExtractInput): Promise<Extraction> {
+function barcodeHint(knownBarcodes?: string[]) {
+  if (!knownBarcodes || knownBarcodes.length === 0) return ""
+  return `\n\nKnown barcodes decoded from the image (use verbatim for udi_or_barcode when they match a sticker; do not alter them):\n${knownBarcodes.join("\n")}`
+}
+
+function parseExtractionJson(text: string, sourceFile: string): Extraction {
+  let json: unknown
+  try {
+    // Some models wrap JSON in markdown fences.
+    const trimmed = text.trim()
+    const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)```$/i)
+    json = JSON.parse(fenced ? fenced[1].trim() : trimmed)
+  } catch {
+    throw new Error("Model did not return valid JSON.")
+  }
+  const parsed = modelExtractionSchema.parse(json)
+  return {
+    ...parsed,
+    source_file: sourceFile,
+    extracted_at: new Date().toISOString(),
+  }
+}
+
+async function extractViaOpenRouter(input: ExtractInput): Promise<Extraction> {
+  const apiKey = process.env.OPENROUTER_API_KEY
+  if (!apiKey) throw new Error("OPENROUTER_API_KEY is not set.")
+
+  if (input.mimeType === "application/pdf") {
+    throw new Error(
+      "OpenRouter extract supports images only. Upload a PNG/JPEG or set GEMINI_API_KEY for PDF.",
+    )
+  }
+
+  const model = process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL
+  const dataUrl = `data:${input.mimeType};base64,${input.base64}`
+  const prompt = INSTRUCTION + barcodeHint(input.knownBarcodes)
+
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "https://localhost:3000",
+      "X-Title": process.env.OPENROUTER_APP_NAME || "Wardline scan demo",
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: dataUrl } },
+          ],
+        },
+      ],
+    }),
+  })
+
+  const payload = (await response.json()) as {
+    error?: { message?: string }
+    choices?: { message?: { content?: string | null } }[]
+  }
+
+  if (!response.ok) {
+    throw new Error(payload.error?.message || `OpenRouter error (${response.status})`)
+  }
+
+  const text = payload.choices?.[0]?.message?.content
+  if (!text) throw new Error("Empty response from OpenRouter.")
+  return parseExtractionJson(text, input.sourceFile)
+}
+
+async function extractViaGemini(input: ExtractInput): Promise<Extraction> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     throw new Error(
@@ -103,16 +196,10 @@ export async function extractFromMedia(input: ExtractInput): Promise<Extraction>
   const model = process.env.GEMINI_MODEL || DEFAULT_MODEL
   const ai = new GoogleGenAI({ apiKey })
 
-  const barcodeHint =
-    input.knownBarcodes && input.knownBarcodes.length > 0
-      ? `\n\nKnown barcodes decoded from the image (use verbatim for udi_or_barcode when they match a sticker; do not alter them):\n${input.knownBarcodes.join("\n")}`
-      : ""
-
   const response = await ai.models.generateContent({
     model,
-    // Text before image per docs guidance; high media resolution for fine sticker text.
     contents: [
-      createPartFromText(INSTRUCTION + barcodeHint),
+      createPartFromText(INSTRUCTION + barcodeHint(input.knownBarcodes)),
       createPartFromBase64(input.base64, input.mimeType),
     ],
     config: {
@@ -125,18 +212,36 @@ export async function extractFromMedia(input: ExtractInput): Promise<Extraction>
 
   const text = response.text
   if (!text) throw new Error("Empty response from Gemini.")
+  return parseExtractionJson(text, input.sourceFile)
+}
 
-  let json: unknown
-  try {
-    json = JSON.parse(text)
-  } catch {
-    throw new Error("Gemini did not return valid JSON.")
+export async function extractFromMedia(input: ExtractInput): Promise<Extraction> {
+  const preferOpenRouter = Boolean(process.env.OPENROUTER_API_KEY)
+
+  // Images: OpenRouter first when configured (avoids AI Studio 503s).
+  // PDFs: Gemini only (OpenRouter vision path is image data-URLs).
+  if (preferOpenRouter && input.mimeType !== "application/pdf") {
+    try {
+      return await extractViaOpenRouter(input)
+    } catch (error) {
+      if (!process.env.GEMINI_API_KEY) throw error
+      // Fall through to Gemini if OpenRouter fails and Gemini is available.
+      console.warn(
+        "[extract] OpenRouter failed, falling back to Gemini:",
+        error instanceof Error ? error.message : error,
+      )
+    }
   }
 
-  const parsed = modelExtractionSchema.parse(json)
-  return {
-    ...parsed,
-    source_file: input.sourceFile,
-    extracted_at: new Date().toISOString(),
+  if (process.env.GEMINI_API_KEY) {
+    return extractViaGemini(input)
   }
+
+  if (preferOpenRouter) {
+    return extractViaOpenRouter(input)
+  }
+
+  throw new Error(
+    "No extract provider configured. Set OPENROUTER_API_KEY or GEMINI_API_KEY in demo/.env.local.",
+  )
 }
