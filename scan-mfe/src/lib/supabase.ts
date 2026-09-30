@@ -57,9 +57,20 @@ export function isSupabaseConfigured() {
 }
 
 export function apiBase() {
-  return (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") || "http://localhost:3000"
+  const configured = import.meta.env.VITE_API_BASE
+  if (configured != null && String(configured).length > 0) {
+    return String(configured).replace(/\/$/, "")
+  }
+  // Production multi-service: same origin as the host (/api/*).
+  if (import.meta.env.PROD) return ""
+  return "http://localhost:3000"
 }
 
 export function hostUrl() {
-  return (import.meta.env.VITE_HOST_URL as string | undefined)?.replace(/\/$/, "") || "http://localhost:3000"
+  const configured = import.meta.env.VITE_HOST_URL
+  if (configured != null && String(configured).length > 0) {
+    return String(configured).replace(/\/$/, "")
+  }
+  if (import.meta.env.PROD) return ""
+  return "http://localhost:3000"
 }
