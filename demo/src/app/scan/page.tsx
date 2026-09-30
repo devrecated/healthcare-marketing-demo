@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import {
   Camera,
@@ -330,12 +330,19 @@ export default function ScanPage() {
       queueMicrotask(() => pumpRef.current())
       toast.success(files.length === 1 ? "Captured" : `Captured ${files.length}`, {
         duration: 1800,
-        icon: <CheckCircle2 className="size-4 text-white" />,
+        icon: <CheckCircle2 className="size-4 shrink-0" color="#ffffff" strokeWidth={2.5} />,
+        style: {
+          "--normal-bg": "#059669",
+          "--normal-text": "#ffffff",
+          "--normal-border": "#047857",
+          background: "#059669",
+          color: "#ffffff",
+          border: "1px solid #047857",
+        } as CSSProperties,
         classNames: {
-          toast: "cn-toast border-emerald-600 bg-emerald-600 text-white",
-          title: "text-white",
-          description: "text-white/90",
-          icon: "text-white",
+          toast: "!bg-[#059669] !text-white !border-[#047857]",
+          title: "!text-white",
+          icon: "!text-white",
         },
       })
     },
