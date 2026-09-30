@@ -330,10 +330,12 @@ export default function ScanPage() {
       queueMicrotask(() => pumpRef.current())
       toast.success(files.length === 1 ? "Captured" : `Captured ${files.length}`, {
         duration: 1800,
-        icon: <CheckCircle2 className="size-4 text-emerald-600" />,
+        icon: <CheckCircle2 className="size-4 text-white" />,
         classNames: {
-          toast: "cn-toast border-emerald-300 bg-emerald-50 text-emerald-950",
-          title: "text-emerald-950",
+          toast: "cn-toast border-emerald-600 bg-emerald-600 text-white",
+          title: "text-white",
+          description: "text-white/90",
+          icon: "text-white",
         },
       })
     },
@@ -560,10 +562,19 @@ export default function ScanPage() {
           ) : null}
 
           {sessionDeducted > 0 ? (
-            <p className="flex items-center justify-center gap-2 text-sm text-emerald-800">
-              <CheckCircle2 className="size-4" />
-              Session total: {sessionDeducted} deducted
-            </p>
+            <div className="flex flex-col gap-3">
+              <p className="flex items-center justify-center gap-2 text-sm text-emerald-800">
+                <CheckCircle2 className="size-4" />
+                Session total: {sessionDeducted} deducted
+              </p>
+              <Button
+                className="min-h-11 w-full"
+                variant="outline"
+                onClick={() => router.push("/inventory")}
+              >
+                Finish session
+              </Button>
+            </div>
           ) : null}
         </section>
       ) : null}
