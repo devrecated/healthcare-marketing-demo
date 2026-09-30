@@ -259,12 +259,16 @@ export function ScanApp({ onSignedOut }: { onSignedOut: () => void }) {
           error: matched.length === 0 ? "No devices matched inventory" : null,
         })
       } catch (caught) {
-        const message =
+        const raw =
           caught instanceof Error && caught.name === "AbortError"
             ? "Extraction timed out"
             : caught instanceof Error
               ? caught.message
               : "Extraction failed"
+        const message =
+          /load failed|failed to fetch|networkerror|cors/i.test(raw)
+            ? `Could not reach host API (${apiBase()}/api/extract). Check VITE_API_BASE on the MFE and that the host allows this origin (CORS).`
+            : raw
         patchItem(id, { status: "error", error: message })
         toast.error(message)
       } finally {
