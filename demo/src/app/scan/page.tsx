@@ -328,6 +328,14 @@ export default function ScanPage() {
         return next
       })
       queueMicrotask(() => pumpRef.current())
+      toast.success(files.length === 1 ? "Captured" : `Captured ${files.length}`, {
+        duration: 1800,
+        icon: <CheckCircle2 className="size-4 text-emerald-600" />,
+        classNames: {
+          toast: "cn-toast border-emerald-300 bg-emerald-50 text-emerald-950",
+          title: "text-emerald-950",
+        },
+      })
     },
     [syncItems],
   )
