@@ -29,6 +29,12 @@ const forms = [
       { name: "Sterile gloves, size 7", mfr: "Medline", ref: "PPE-GLV-7", udi: "(01)00841110002220", lot: "GLV-7701", qty: 1 },
       { name: "Vicryl suture 3-0", mfr: "Ethicon", ref: "SUT-VIC-30", udi: "(01)00845554443330", lot: "VIC-4471", qty: 1 },
       { name: "Gauze sponges", mfr: "Medline", ref: "CON-GAU-4", udi: "(01)00842223334440", lot: "GAU-4471", qty: 1 },
+      { name: "Bone cement", mfr: "Stryker", ref: "CON-CEM-04", udi: "(01)00849876543211", lot: "CEM-2232", qty: 1 },
+      { name: "Vicryl suture 3-0", mfr: "Ethicon", ref: "SUT-VIC-30", udi: "(01)00845554443331", lot: "VIC-4472", qty: 1 },
+      { name: "Sterile gloves, size 7", mfr: "Medline", ref: "PPE-GLV-7", udi: "(01)00841110002221", lot: "GLV-7702", qty: 1 },
+      { name: "Gauze sponges", mfr: "Medline", ref: "CON-GAU-4", udi: "(01)00842223334441", lot: "GAU-4472", qty: 1 },
+      { name: "Orthopedic drape pack", mfr: "Medline", ref: "CON-DRP-12", udi: "(01)00847778889991", lot: "DRP-8891", qty: 1 },
+      { name: "Propofol 20ml", mfr: "Fresenius", ref: "MED-PRO-20", udi: "(01)00843334445550", lot: "PRO-4471", qty: 1 },
     ],
   },
   {
@@ -44,6 +50,12 @@ const forms = [
       { name: "Bone cement", mfr: "Stryker", ref: "CON-CEM-04", udi: "(01)00849876543210", lot: "CEM-1120", qty: 1 },
       { name: "Sterile gloves, size 7", mfr: "Medline", ref: "PPE-GLV-7", udi: "(01)00841110002220", lot: "GLV-1120", qty: 1 },
       { name: "Gauze sponges", mfr: "Medline", ref: "CON-GAU-4", udi: "(01)00842223334440", lot: "GAU-1120", qty: 1 },
+      { name: "Intraocular lens", mfr: "Alcon", ref: "IMP-IOL-21", udi: "(01)00843216549871", lot: "IOL-1121", qty: 1 },
+      { name: "Vicryl suture 3-0", mfr: "Ethicon", ref: "SUT-VIC-30", udi: "(01)00845554443332", lot: "VIC-3301", qty: 1 },
+      { name: "Sterile gloves, size 7", mfr: "Medline", ref: "PPE-GLV-7", udi: "(01)00841110002222", lot: "GLV-1121", qty: 1 },
+      { name: "Gauze sponges", mfr: "Medline", ref: "CON-GAU-4", udi: "(01)00842223334442", lot: "GAU-1121", qty: 1 },
+      { name: "Orthopedic drape pack", mfr: "Medline", ref: "CON-DRP-12", udi: "(01)00847778889992", lot: "DRP-8892", qty: 1 },
+      { name: "Propofol 20ml", mfr: "Fresenius", ref: "MED-PRO-20", udi: "(01)00843334445551", lot: "PRO-1120", qty: 1 },
     ],
   },
   {
@@ -59,6 +71,12 @@ const forms = [
       { name: "Orthopedic drape pack", mfr: "Medline", ref: "CON-DRP-12", udi: "(01)00847778889990", lot: "DRP-1550", qty: 1 },
       { name: "Vicryl suture 3-0", mfr: "Ethicon", ref: "SUT-VIC-30", udi: "(01)00845554443330", lot: "VIC-1550", qty: 1 },
       { name: "Sterile gloves, size 7", mfr: "Medline", ref: "PPE-GLV-7", udi: "(01)00841110002220", lot: "GLV-1550", qty: 1 },
+      { name: "Laparoscopic clip applier", mfr: "Teleflex", ref: "CON-CLIP-2", udi: "(01)00846667778881", lot: "CLIP-0203", qty: 1 },
+      { name: "Vicryl suture 3-0", mfr: "Ethicon", ref: "SUT-VIC-30", udi: "(01)00845554443333", lot: "VIC-1551", qty: 1 },
+      { name: "Gauze sponges", mfr: "Medline", ref: "CON-GAU-4", udi: "(01)00842223334443", lot: "GAU-4005", qty: 1 },
+      { name: "Sterile gloves, size 7", mfr: "Medline", ref: "PPE-GLV-7", udi: "(01)00841110002223", lot: "GLV-1551", qty: 1 },
+      { name: "Orthopedic drape pack", mfr: "Medline", ref: "CON-DRP-12", udi: "(01)00847778889993", lot: "DRP-1551", qty: 1 },
+      { name: "Propofol 20ml", mfr: "Fresenius", ref: "MED-PRO-20", udi: "(01)00843334445552", lot: "PRO-1550", qty: 1 },
     ],
   },
 ]
@@ -68,16 +86,16 @@ function esc(s) {
 }
 
 const STICKER_COLS = 2
-const STICKER_GAP = 16
-const STICKER_H = 180
-const MARGIN_X = 40
-const GRID_TOP = 160
+const STICKER_GAP = 10
+const STICKER_H = 108
+const MARGIN_X = 36
+const GRID_TOP = 148
 
 /** Decorative barcode: skinny bars, tight gaps, natural width (not stretched). */
 function barcode(centerX, y, seed, height) {
   const digits = seed.replace(/\D/g, "").padEnd(16, "1").slice(0, 16)
-  const bars = [...digits].map((d) => 1.8 + (Number(d) % 3) * 0.7)
-  const gap = 1.35
+  const bars = [...digits].map((d) => 1.35 + (Number(d) % 3) * 0.55)
+  const gap = 1.1
   const totalWidth = bars.reduce((sum, w) => sum + w + gap, 0) - gap
   let cursor = centerX - totalWidth / 2
   let out = ""
@@ -89,15 +107,15 @@ function barcode(centerX, y, seed, height) {
 }
 
 function sticker(d, x, y, w) {
-  const barcodeY = 58
-  const barcodeH = 72
+  const barcodeY = 30
+  const barcodeH = 44
   const digits = d.udi.replace(/\D/g, "")
   return `
     <g transform="translate(${x} ${y})">
-      <rect x="0" y="0" width="${w}" height="${STICKER_H}" rx="8" fill="#fffdf5" stroke="#c9c2ad" stroke-width="1.5"/>
-      <text x="${w / 2}" y="36" text-anchor="middle" font-family="Helvetica, Arial" font-size="18" font-weight="bold" fill="#111">${esc(d.name)}</text>
+      <rect x="0" y="0" width="${w}" height="${STICKER_H}" rx="5" fill="#fffdf5" stroke="#c9c2ad" stroke-width="1"/>
+      <text x="${w / 2}" y="20" text-anchor="middle" font-family="Helvetica, Arial" font-size="12" font-weight="bold" fill="#111">${esc(d.name)}</text>
       ${barcode(w / 2, barcodeY, d.udi, barcodeH)}
-      <text x="${w / 2}" y="${STICKER_H - 22}" text-anchor="middle" font-family="Courier, monospace" font-size="13" fill="#444">${esc(digits)}</text>
+      <text x="${w / 2}" y="${STICKER_H - 12}" text-anchor="middle" font-family="Courier, monospace" font-size="10" fill="#444">${esc(digits)}</text>
     </g>`
 }
 
