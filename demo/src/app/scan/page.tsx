@@ -69,19 +69,19 @@ export default function ScanPage() {
   const [sessionDeducted, setSessionDeducted] = useState(0)
   const [batchConfirming, setBatchConfirming] = useState(false)
 
+  // itemsRef is the source of truth for the extract queue. Always update it
+  // synchronously before setState so pumpQueue never runs against a stale list
+  // (React can defer the setState updater until after a microtask — that left a
+  // single capture stuck as "queued" forever).
   const syncItems = useCallback((next: QueueItem[] | ((prev: QueueItem[]) => QueueItem[])) => {
-    setItems((prev) => {
-      const resolved = typeof next === "function" ? next(prev) : next
-      itemsRef.current = resolved
-      return resolved
-    })
+    const resolved = typeof next === "function" ? next(itemsRef.current) : next
+    itemsRef.current = resolved
+    setItems(resolved)
   }, [])
 
   const patchItem = useCallback(
     (id: string, patch: Partial<QueueItem>) => {
-      syncItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...patch } : item)),
-      )
+      syncItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
     },
     [syncItems],
   )
@@ -292,14 +292,11 @@ export default function ScanPage() {
       if (!next) break
 
       inFlightRef.current.add(next.id)
-      // Functional update only — avoids racing a concrete setItems overwrite.
-      syncItems((prev) => {
-        const mapped = prev.map((item) =>
+      syncItems((prev) =>
+        prev.map((item) =>
           item.id === next.id ? { ...item, status: "extracting" as const, error: null } : item,
-        )
-        itemsRef.current = mapped
-        return mapped
-      })
+        ),
+      )
       void runExtract(next.id)
     }
   }, [runExtract, syncItems])
@@ -322,12 +319,8 @@ export default function ScanPage() {
         error: null,
         deducted: [],
       }))
-      syncItems((prev) => {
-        const next = [...prev, ...created]
-        itemsRef.current = next
-        return next
-      })
-      queueMicrotask(() => pumpRef.current())
+      syncItems((prev) => [...prev, ...created])
+      pumpRef.current()
       toast.success(files.length === 1 ? "Captured" : `Captured ${files.length}`, {
         duration: 1800,
         icon: (
@@ -394,7 +387,7 @@ export default function ScanPage() {
       if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
       return prev.filter((item) => item.id !== id)
     })
-    queueMicrotask(() => pumpRef.current())
+    pumpRef.current()
   }
 
   function clearDone() {
@@ -660,7 +653,7 @@ export default function ScanPage() {
                           skipped: [],
                           extraction: null,
                         })
-                        queueMicrotask(() => pumpRef.current())
+                        pumpRef.current()
                       }}
                     >
                       Retry extract
