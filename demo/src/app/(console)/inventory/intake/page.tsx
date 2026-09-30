@@ -208,7 +208,7 @@ export default function IntakePage() {
             ref: device.ref ?? "",
             udi: device.udi_or_barcode ?? "",
             lot: device.lot ?? "",
-            qty: device.qty ?? 1,
+            qty: 1,
             confidence: device.confidence ?? 0,
             supplyId: match?.supply.id ?? NO_MATCH,
           }
@@ -226,7 +226,7 @@ export default function IntakePage() {
     setRows((current) => current.map((row) => (row.key === key ? { ...row, ...next } : row)))
   }
 
-  const approvable = rows.filter((row) => row.include && row.supplyId !== NO_MATCH && row.qty > 0)
+  const approvable = rows.filter((row) => row.include && row.supplyId !== NO_MATCH)
 
   function approve() {
     if (approvable.length === 0) {
@@ -244,7 +244,7 @@ export default function IntakePage() {
         supplyId: row.supplyId,
         sku: supply?.sku ?? "",
         device: row.productName || supply?.name || "Device",
-        qty: row.qty,
+        qty: 1,
         approvedBy: MOCK_USER.name,
         rawStickerText: row.rawStickerText,
         recordedAt,
@@ -526,15 +526,6 @@ export default function IntakePage() {
                           className="min-h-11"
                           value={row.lot}
                           onChange={(event) => patch(row.key, { lot: event.target.value })}
-                        />
-                      </Field>
-                      <Field label="Qty">
-                        <Input
-                          className="min-h-11"
-                          type="number"
-                          min={1}
-                          value={row.qty}
-                          onChange={(event) => patch(row.key, { qty: Math.max(1, Number(event.target.value) || 1) })}
                         />
                       </Field>
                       <Choice

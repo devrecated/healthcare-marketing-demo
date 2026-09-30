@@ -58,6 +58,17 @@ exception
     end if;
 end $$;
 
+do $$
+begin
+  alter publication supabase_realtime add table public.usage_log;
+exception
+  when duplicate_object then null;
+  when others then
+    if sqlerrm not like '%already member%' then
+      raise;
+    end if;
+end $$;
+
 -- Atomic confirm: match rows already resolved by the API as JSONB array of
 -- { id, supply_id, sku, device, qty, raw_sticker_text, form_id, procedure_date, center_hint, approved_by }
 create or replace function public.confirm_scan_deduction(entries jsonb)
