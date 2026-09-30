@@ -14,6 +14,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { matchDeviceToSupply, type Extraction } from "@/lib/extraction"
 import { newId } from "@/lib/id"
+import {
+  MOCK_FORM_CATALOG,
+  buildFormSvg,
+  buildRandomFormSpec,
+  fetchMockFormFile,
+  mockPublicPath,
+  svgToPngFile,
+} from "@/lib/mock-forms"
 import { MOCK_USER } from "@/lib/session"
 import { useStore } from "@/lib/store"
 import type { UsageLogEntry } from "@/lib/types"
@@ -50,6 +58,7 @@ export default function IntakePage() {
   const [uncertain, setUncertain] = useState<string[]>([])
   const [header, setHeader] = useState<Header | null>(null)
   const [rows, setRows] = useState<ReviewRow[]>([])
+  const [mockBusy, setMockBusy] = useState(false)
 
   const supplyOptions = useMemo(
     () => [
@@ -67,6 +76,50 @@ export default function IntakePage() {
     setUncertain([])
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(next && next.type !== "application/pdf" ? URL.createObjectURL(next) : null)
+  }
+
+  async function grabMock(fileBase: string, label: string) {
+    setMockBusy(true)
+    try {
+      const next = await fetchMockFormFile(fileBase)
+      onPick(next)
+      toast(`Loaded mock: ${label}`)
+    } catch (caught) {
+      toast.error(caught instanceof Error ? caught.message : "Could not load mock image")
+    } finally {
+      setMockBusy(false)
+    }
+  }
+
+  async function generateMock() {
+    setMockBusy(true)
+    try {
+      const spec = buildRandomFormSpec(supplies)
+      const svg = buildFormSvg(spec)
+      const next = await svgToPngFile(svg, `${spec.file}.png`)
+      onPick(next)
+      toast(`Generated mock form (${spec.devices.length} devices)`)
+    } catch (caught) {
+      toast.error(caught instanceof Error ? caught.message : "Could not generate mock image")
+    } finally {
+      setMockBusy(false)
+    }
+  }
+
+  async function generateFromCatalog(id: string) {
+    const form = MOCK_FORM_CATALOG.find((item) => item.id === id)
+    if (!form) return
+    setMockBusy(true)
+    try {
+      const svg = buildFormSvg(form)
+      const next = await svgToPngFile(svg, `${form.file}.png`)
+      onPick(next)
+      toast(`Generated: ${form.label}`)
+    } catch (caught) {
+      toast.error(caught instanceof Error ? caught.message : "Could not generate mock image")
+    } finally {
+      setMockBusy(false)
+    }
   }
 
   async function runExtract() {
@@ -160,20 +213,86 @@ export default function IntakePage() {
       </PageIntro>
 
       <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-        <strong>Sanitized data only.</strong> Upload synthetic or fully redacted forms. No PHI — the
-        production path for real patient forms is Gemini on Vertex AI under a BAA. Nothing is written to
-        inventory until you approve it below.
+        <strong>Sanitized data only.</strong> Upload only synthetic or fully redacted forms. No PHI - we are using Google AI Studio, and the shared hereis not private. —
+        the production path for real patient forms requires a custom, self-hosted model.
       </div>
 
       <Reveal>
+        <div className="mb-4 rounded-2xl border bg-card p-4">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                Mock forms
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Synthetic sticker sheets only — grab a fixture or generate a fresh PNG in-browser.
+              </p>
+            </div>
+            <Button
+              className="min-h-11"
+              variant="outline"
+              disabled={mockBusy || loading}
+              onClick={generateMock}
+            >
+              {mockBusy ? "Working…" : "Generate random mock"}
+            </Button>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {MOCK_FORM_CATALOG.map((form) => (
+              <article key={form.id} className="overflow-hidden rounded-xl border bg-background">
+                <img
+                  src={mockPublicPath(form.file)}
+                  alt={form.label}
+                  className="aspect-[3/4] w-full object-cover object-top"
+                />
+                <div className="space-y-2 p-3">
+                  <p className="text-sm font-medium">{form.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {form.devices.length} devices · {form.center}
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      className="min-h-11 w-full"
+                      size="sm"
+                      disabled={mockBusy || loading}
+                      onClick={() => grabMock(form.file, form.label)}
+                    >
+                      Grab mock image
+                    </Button>
+                    <Button
+                      className="min-h-11 w-full"
+                      size="sm"
+                      variant="outline"
+                      disabled={mockBusy || loading}
+                      onClick={() => generateFromCatalog(form.id)}
+                    >
+                      Regenerate PNG
+                    </Button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+
+      <Reveal>
         <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/heic,image/heif,application/pdf"
-            className="block w-full text-sm file:mr-3 file:min-h-11 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:text-primary-foreground"
-            onChange={(event) => onPick(event.target.files?.[0] ?? null)}
-          />
+          <div className="min-w-0 flex-1">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/heic,image/heif,application/pdf"
+              className="block w-full text-sm file:mr-3 file:min-h-11 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:text-primary-foreground"
+              onChange={(event) => onPick(event.target.files?.[0] ?? null)}
+            />
+            {file ? (
+              <p className="mt-2 truncate text-xs text-muted-foreground">
+                Ready: <span className="font-medium text-foreground">{file.name}</span>
+              </p>
+            ) : null}
+          </div>
           <Button className="min-h-11 shrink-0" onClick={runExtract} disabled={loading || !file}>
             {loading ? "Extracting…" : "Extract devices"}
           </Button>
