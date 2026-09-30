@@ -1,17 +1,20 @@
 // Generate synthetic MSP device-usage compliance forms (SVG -> PNG).
-// SANITIZED / SYNTHETIC ONLY. Patient refs are fake. Product names match the
-// app seed SKUs so matchDeviceToSupply() resolves them during the demo.
+// SANITIZED / SYNTHETIC ONLY. Writes to fixtures/forms and public/fixtures/forms
+// so the intake UI can "Grab mock image" without a build step.
 //
-// Run: node scripts/make-fixtures.mjs   (requires rsvg-convert on PATH)
+// Run: pnpm fixtures   (requires rsvg-convert on PATH)
 import { execFileSync } from "node:child_process"
-import { mkdirSync, writeFileSync, existsSync } from "node:fs"
+import { mkdirSync, writeFileSync, existsSync, copyFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const formsDir = join(here, "..", "fixtures", "forms")
+const publicDir = join(here, "..", "public", "fixtures", "forms")
 mkdirSync(formsDir, { recursive: true })
+mkdirSync(publicDir, { recursive: true })
 
+// Keep in sync with src/lib/mock-forms.ts MOCK_FORM_CATALOG.
 const forms = [
   {
     file: "form-richmond-knee",
@@ -55,7 +58,6 @@ function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 }
 
-// Deterministic pseudo-barcode: vertical bars derived from the UDI digits.
 function barcode(x, y, seed) {
   const digits = seed.replace(/\D/g, "").padEnd(24, "1")
   let out = ""
@@ -87,11 +89,13 @@ function buildSvg(form) {
   const W = 720
   const H = 960
   let y = 150
-  const stickers = form.devices.map((d) => {
-    const s = sticker(d, 40, y, W - 80)
-    y += 140
-    return s
-  }).join("")
+  const stickers = form.devices
+    .map((d) => {
+      const s = sticker(d, 40, y, W - 80)
+      y += 140
+      return s
+    })
+    .join("")
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="#ffffff"/>
@@ -111,7 +115,7 @@ try {
   execFileSync("rsvg-convert", ["--version"], { stdio: "ignore" })
 } catch {
   haveRsvg = false
-  console.warn("rsvg-convert not found — writing .svg only (convert to .png manually).")
+  console.warn("rsvg-convert not found — writing .svg only (UI can still generate PNGs in-browser).")
 }
 
 for (const form of forms) {
@@ -121,8 +125,12 @@ for (const form of forms) {
   if (haveRsvg) {
     const pngPath = join(formsDir, `${form.file}.png`)
     execFileSync("rsvg-convert", ["-o", pngPath, svgPath])
-    console.log("wrote", pngPath)
-  } else if (!existsSync(join(formsDir, `${form.file}.png`))) {
+    copyFileSync(pngPath, join(publicDir, `${form.file}.png`))
+    console.log("wrote", pngPath, "+ public copy")
+  } else if (existsSync(join(formsDir, `${form.file}.png`))) {
+    copyFileSync(join(formsDir, `${form.file}.png`), join(publicDir, `${form.file}.png`))
+    console.log("copied existing png to public", form.file)
+  } else {
     console.log("wrote", svgPath)
   }
 }
