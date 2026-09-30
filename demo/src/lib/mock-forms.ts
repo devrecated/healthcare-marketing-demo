@@ -200,6 +200,16 @@ export function svgDataUrl(svg: string) {
 
 /** Browser-only: rasterize SVG → PNG File for upload to /api/extract. */
 export async function svgToPngFile(svg: string, filename: string): Promise<File> {
+  const canvas = await svgToCanvas(svg)
+  const png = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((next) => (next ? resolve(next) : reject(new Error("PNG encode failed"))), "image/png")
+  })
+  return new File([png], filename.endsWith(".png") ? filename : `${filename}.png`, {
+    type: "image/png",
+  })
+}
+
+async function svgToCanvas(svg: string): Promise<HTMLCanvasElement> {
   const url = svgDataUrl(svg)
   const img = new Image()
   img.decoding = "async"
@@ -223,12 +233,107 @@ export async function svgToPngFile(svg: string, filename: string): Promise<File>
   ctx.fillStyle = "#ffffff"
   ctx.fillRect(0, 0, FORM_WIDTH, FORM_HEIGHT)
   ctx.drawImage(img, 0, 0, FORM_WIDTH, FORM_HEIGHT)
-  const png = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((next) => (next ? resolve(next) : reject(new Error("PNG encode failed"))), "image/png")
-  })
-  return new File([png], filename.endsWith(".png") ? filename : `${filename}.png`, {
-    type: "image/png",
-  })
+  return canvas
+}
+
+/** Single-page PDF of the form (same raster look as the cards). */
+export async function downloadFormPdf(svg: string, filename: string): Promise<void> {
+  const canvas = await svgToCanvas(svg)
+  const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.92)
+  const jpegBase64 = jpegDataUrl.split(",")[1] ?? ""
+  const jpegBytes = Uint8Array.from(atob(jpegBase64), (c) => c.charCodeAt(0))
+  const pdf = buildJpegPdf(jpegBytes, FORM_WIDTH, FORM_HEIGHT)
+  const blob = new Blob([pdf], { type: "application/pdf" })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = filename.endsWith(".pdf") ? filename : `${filename}.pdf`
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+/** Minimal PDF wrapping one JPEG (letter-ish page scaled to image aspect). */
+function buildJpegPdf(jpeg: Uint8Array, imgW: number, imgH: number): Uint8Array {
+  // Fit image on a US Letter page (612×792 pt) with small margins.
+  const pageW = 612
+  const pageH = 792
+  const margin = 24
+  const maxW = pageW - margin * 2
+  const maxH = pageH - margin * 2
+  const scale = Math.min(maxW / imgW, maxH / imgH)
+  const drawW = imgW * scale
+  const drawH = imgH * scale
+  const x = (pageW - drawW) / 2
+  const y = (pageH - drawH) / 2
+
+  const encoder = new TextEncoder()
+  const parts: Uint8Array[] = []
+  const offsets: number[] = []
+  let cursor = 0
+
+  function push(bytes: Uint8Array | string) {
+    const chunk = typeof bytes === "string" ? encoder.encode(bytes) : bytes
+    parts.push(chunk)
+    cursor += chunk.length
+  }
+
+  function startObj(id: number) {
+    offsets[id] = cursor
+    push(`${id} 0 obj\n`)
+  }
+
+  function endObj() {
+    push("\nendobj\n")
+  }
+
+  push("%PDF-1.4\n")
+
+  startObj(1)
+  push("<< /Type /Catalog /Pages 2 0 R >>")
+  endObj()
+
+  startObj(2)
+  push("<< /Type /Pages /Kids [3 0 R] /Count 1 >>")
+  endObj()
+
+  startObj(3)
+  push(
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`,
+  )
+  endObj()
+
+  startObj(4)
+  push(
+    `<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`,
+  )
+  push(jpeg)
+  push("\nendstream")
+  endObj()
+
+  const content = `q\n${drawW.toFixed(2)} 0 0 ${drawH.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm\n/Im0 Do\nQ\n`
+  const contentBytes = encoder.encode(content)
+  startObj(5)
+  push(`<< /Length ${contentBytes.length} >>\nstream\n`)
+  push(contentBytes)
+  push("\nendstream")
+  endObj()
+
+  const xrefStart = cursor
+  push(`xref\n0 6\n`)
+  push("0000000000 65535 f \n")
+  for (let id = 1; id <= 5; id++) {
+    push(`${String(offsets[id] ?? 0).padStart(10, "0")} 00000 n \n`)
+  }
+  push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`)
+
+  const total = parts.reduce((sum, part) => sum + part.length, 0)
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const part of parts) {
+    out.set(part, offset)
+    offset += part.length
+  }
+  return out
 }
 
 /** Fetch a prebuilt fixture from /public/fixtures/forms. */

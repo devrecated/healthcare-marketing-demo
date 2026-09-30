@@ -15,9 +15,12 @@ import { Input } from "@/components/ui/input"
 import { matchDeviceToSupply, type Extraction } from "@/lib/extraction"
 import { newId } from "@/lib/id"
 import {
+  FORM_HEIGHT,
+  FORM_WIDTH,
   MOCK_FORM_CATALOG,
   buildFormSvg,
   buildRandomFormSpec,
+  downloadFormPdf,
   svgDataUrl,
   svgToPngFile,
 } from "@/lib/mock-forms"
@@ -108,6 +111,69 @@ export default function IntakePage() {
     }
   }
 
+  async function printForms(
+    forms: Omit<(typeof MOCK_FORM_CATALOG)[number], "id" | "file" | "label">[],
+    title: string,
+  ) {
+    // Open synchronously on the click gesture so the browser allows the tab.
+    const win = window.open("about:blank", "_blank")
+    if (!win) {
+      toast.error("Pop-up blocked — allow pop-ups to print forms")
+      return
+    }
+    win.document.write(`<!DOCTYPE html><title>Preparing print…</title><p style="font-family:sans-serif;padding:2rem">Preparing print preview…</p>`)
+    win.document.close()
+
+    setMockBusy(true)
+    const objectUrls: string[] = []
+    try {
+      // Same SVG→canvas→PNG path as cards / "Use this form" so barcodes match.
+      const imgs: string[] = []
+      for (const [index, form] of forms.entries()) {
+        const file = await svgToPngFile(buildFormSvg(form), `print-${index}.png`)
+        const url = URL.createObjectURL(file)
+        objectUrls.push(url)
+        imgs.push(
+          `<section class="sheet"><img src="${url}" width="${FORM_WIDTH}" height="${FORM_HEIGHT}" alt=""/></section>`,
+        )
+      }
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>${title.replace(/</g, "")}</title>
+  <style>
+    @page { size: letter portrait; margin: 0.35in; }
+    html, body { margin: 0; padding: 0; background: #fff; }
+    .sheet { page-break-after: always; break-after: page; }
+    .sheet:last-child { page-break-after: auto; break-after: auto; }
+    img { display: block; width: 100%; height: auto; max-width: 7.5in; margin: 0 auto; }
+  </style>
+</head>
+<body>${imgs.join("\n")}
+<script>
+  window.addEventListener("load", function () {
+    setTimeout(function () { window.print(); }, 150);
+  });
+</script>
+</body>
+</html>`
+      win.document.open()
+      win.document.write(html)
+      win.document.close()
+      win.focus()
+      window.setTimeout(() => {
+        for (const url of objectUrls) URL.revokeObjectURL(url)
+      }, 120_000)
+    } catch (caught) {
+      toast.error(caught instanceof Error ? caught.message : "Could not prepare print preview")
+      for (const url of objectUrls) URL.revokeObjectURL(url)
+      win.close()
+    } finally {
+      setMockBusy(false)
+    }
+  }
+
   async function runExtract() {
     if (!file) {
       toast.error("Choose a form image or PDF first")
@@ -193,9 +259,14 @@ export default function IntakePage() {
   return (
     <div>
       <PageIntro eyebrow="Intake" title="Scan device form">
-        <Link href="/inventory/usage" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-          View usage log
-        </Link>
+        <div className="flex flex-wrap gap-3 text-sm">
+          <Link href="/scan" className="text-muted-foreground underline-offset-4 hover:underline">
+            Open scan camera
+          </Link>
+          <Link href="/inventory/usage" className="text-muted-foreground underline-offset-4 hover:underline">
+            View usage log
+          </Link>
+        </div>
       </PageIntro>
 
       <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
@@ -211,17 +282,27 @@ export default function IntakePage() {
                 Mock forms
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Synthetic sticker sheets only — grab a fixture or generate a fresh PNG in-browser.
+                Synthetic sticker sheets only — grab a fixture, print for the camera demo, or generate a fresh PNG.
               </p>
             </div>
-            <Button
-              className="min-h-11"
-              variant="outline"
-              disabled={mockBusy || loading}
-              onClick={generateMock}
-            >
-              {mockBusy ? "Working…" : "Generate random mock"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                className="min-h-11"
+                variant="outline"
+                disabled={mockBusy || loading}
+                onClick={() => void printForms(MOCK_FORM_CATALOG, "Acme Healthcare mock forms")}
+              >
+                Print all forms
+              </Button>
+              <Button
+                className="min-h-11"
+                variant="outline"
+                disabled={mockBusy || loading}
+                onClick={generateMock}
+              >
+                {mockBusy ? "Working…" : "Generate random mock"}
+              </Button>
+            </div>
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -237,14 +318,48 @@ export default function IntakePage() {
                   <p className="text-xs text-muted-foreground">
                     {form.devices.length} devices · {form.center}
                   </p>
-                  <Button
-                    className="min-h-11 w-full"
-                    size="sm"
-                    disabled={mockBusy || loading}
-                    onClick={() => grabMock(form.id, form.label)}
-                  >
-                    Use this form
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      className="min-h-11 w-full"
+                      size="sm"
+                      disabled={mockBusy || loading}
+                      onClick={() => grabMock(form.id, form.label)}
+                    >
+                      Use this form
+                    </Button>
+                    <Button
+                      className="min-h-11 w-full"
+                      size="sm"
+                      variant="outline"
+                      disabled={mockBusy || loading}
+                      onClick={() => void printForms([form], form.label)}
+                    >
+                      Print this form
+                    </Button>
+                    <Button
+                      className="min-h-11 w-full"
+                      size="sm"
+                      variant="outline"
+                      disabled={mockBusy || loading}
+                      onClick={() => {
+                        void (async () => {
+                          setMockBusy(true)
+                          try {
+                            await downloadFormPdf(buildFormSvg(form), `${form.file}.pdf`)
+                            toast.success(`Downloaded ${form.label}`)
+                          } catch (caught) {
+                            toast.error(
+                              caught instanceof Error ? caught.message : "Could not download PDF",
+                            )
+                          } finally {
+                            setMockBusy(false)
+                          }
+                        })()
+                      }}
+                    >
+                      Download PDF
+                    </Button>
+                  </div>
                 </div>
               </article>
             ))}
