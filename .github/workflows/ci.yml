@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [master, one-hour]
+  pull_request:
+    branches: [master, one-hour]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo:
+    name: Host (demo)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: demo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: demo/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+        env:
+          # Build must not require live secrets; runtime APIs fail closed without keys.
+          NEXT_TELEMETRY_DISABLED: "1"
+
+  scan-mfe:
+    name: Scan MFE
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scan-mfe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: scan-mfe/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
