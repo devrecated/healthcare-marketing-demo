@@ -12,7 +12,7 @@ and reads Supabase supplies for client-side matching.
    - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — same project as the host
 3. Run host: `cd ../demo && pnpm dev`
 4. Run MFE: `pnpm dev` → [http://localhost:5173](http://localhost:5173)
-5. Sign in with password shown on the login screen.
+5. Sign in with `DEMO_GATE` from `src/lib/session.ts` (shown on the login screen).
 
 Phone camera needs HTTPS (or localhost). Point `VITE_API_BASE` at a tunnel to the host
 when the phone cannot reach `localhost:3000`.

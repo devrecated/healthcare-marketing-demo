@@ -35,13 +35,13 @@ Redeploy after setting `NEXT_PUBLIC_*` / `VITE_*`. Host CORS allows the scan ori
 3. Run the Supabase migration
    [`supabase/migrations/20260930120000_scan_inventory.sql`](supabase/migrations/20260930120000_scan_inventory.sql).
 4. Ensure `supplies` (and ideally `usage_log`) are in the Realtime publication.
-5. `pnpm dev` — [http://localhost:3000](http://localhost:3000) (password shown on the login screen).
+5. `pnpm dev` — [http://localhost:3000](http://localhost:3000). Sign-in password is `DEMO_GATE` in `src/lib/session.ts`.
 
 ## Scan MFE setup
 
 1. `pnpm install` in `scan-mfe/`.
 2. Copy `scan-mfe/.env.example` → `.env.local` (`VITE_API_BASE`, `VITE_HOST_URL`, Supabase anon).
-3. `pnpm dev` — [http://localhost:5173](http://localhost:5173) (password shown on the login screen).
+3. `pnpm dev` — [http://localhost:5173](http://localhost:5173). Same gate as the host (`DEMO_GATE` in `src/lib/session.ts`).
 
 Host **Mock forms** / **Usage log** open the MFE URL. `/scan` on the host redirects there.
 

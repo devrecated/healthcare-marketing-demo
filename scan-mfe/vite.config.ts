@@ -14,7 +14,7 @@ export default defineConfig({
       includeAssets: ["icon.svg", "pwa-192.png", "pwa-512.png"],
       manifest: {
         name: "Acme Healthcare Scan",
-        short_name: "Acme Healthcare Scan",
+        short_name: "Acme Scan",
         description: "Capture device forms and deduct inventory",
         theme_color: "#2a4a44",
         background_color: "#f8f6f0",

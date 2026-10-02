@@ -1,10 +1,12 @@
-# Healthcare marketing demo (one hour)
+# Acme Healthcare — one-hour AutoDevelop demo
 
-Public **Acme Healthcare** clinic-ops demo: scan a synthetic Point-of-Use device form → extract devices with a multimodal model → human review → deduct inventory live across devices.
+Marketing example of what **Devrecated** can ship with **AutoDevelop** in less than one hour: a full clinic inventory scan flow for a fictional **Acme Healthcare** buyer.
 
-This repo is the **Acme Healthcare** showcase (no real client names). Synthetic data only — never upload PHI.
+Scan a synthetic Point-of-Use device form → multimodal extract → human review → live inventory deduct across laptop and phone.
 
-## What we shipped in about an hour
+Synthetic data only — never upload PHI.
+
+## Built in under an hour
 
 | Slice | What you can show |
 |-------|-------------------|
@@ -13,7 +15,6 @@ This repo is the **Acme Healthcare** showcase (no real client names). Synthetic 
 | Live inventory | Shared Supabase `supplies` + `usage_log` with Realtime |
 | Extraction | Server-side OpenRouter / Gemini on the host (keys never in the browser) |
 | Fixtures | Printable synthetic sticker sheets branded **Acme Healthcare** |
-
 
 ## Live URLs
 
@@ -33,18 +34,18 @@ Sign-in uses the demo password documented in [`demo/README.md`](demo/README.md).
 
 Setup details (env, Supabase migration, Vercel): see [`demo/README.md`](demo/README.md) and [`scan-mfe/README.md`](scan-mfe/README.md).
 
-## One-hour demo script
+## Demo script
 
 1. Laptop: open the host → **Supplies** (live quantities).
 2. **Scan intake** → print or grab an Acme Healthcare mock form.
 3. Phone: open the scan MFE → photograph the form → review matches → **Confirm & deduct**.
 4. Laptop: Supplies drop via Realtime; **Usage log** shows the rows.
 
-Say out loud: human-in-the-loop (nothing hits inventory until confirm), sanitized forms only, production PHI would need Vertex + BAA.
+Human-in-the-loop: nothing hits inventory until confirm. Sanitized forms only. Production PHI would need Vertex + BAA.
 
 ## Branch
 
-Work that extends this public demo lands on **`one-hour`** (and merges to `master` when ready).
+Continued work on this public example lands on **`one-hour`** (merge to `master` when ready).
 
 ## CI
 

@@ -85,7 +85,7 @@ export function SidebarBrand({
     <div className={cn("flex items-start gap-2 px-3 py-5", collapsed && "flex-col items-center")}>
       <div className={cn("min-w-0 flex-1", collapsed && "text-center")}>
         <p className="font-heading text-2xl tracking-tight text-sidebar-foreground">
-          {collapsed ? "W" : "Acme Healthcare"}
+          {collapsed ? "A" : "Acme Healthcare"}
         </p>
         {collapsed ? null : (
           <p className="mt-1 text-xs tracking-wide text-sidebar-foreground/70">Clinic operations</p>

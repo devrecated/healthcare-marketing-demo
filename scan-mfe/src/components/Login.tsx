@@ -23,7 +23,7 @@ export function Login({ onSignedIn }: { onSignedIn: () => void }) {
         className="w-full max-w-md rounded-3xl border bg-card p-8 shadow-sm"
       >
         <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">
-          Acme Healthcare · Scan MFE
+          Acme Healthcare · Scan
         </p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Sign in</h1>
         <p className="mt-2 text-sm text-muted-foreground">
