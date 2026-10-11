@@ -35,6 +35,8 @@ function isAllowedOrigin(origin: string) {
   if (allowedScanOrigins().includes(normalized)) return true
   // Separate Vercel project for the scan MFE (preview + production URLs).
   if (/^https:\/\/[\w.-]+\.vercel\.app$/.test(normalized)) return true
+  // Custom demo domains (e.g. healthcare-docscan-mfe-demo.devrecated.com).
+  if (/^https:\/\/[\w.-]+\.devrecated\.com$/.test(normalized)) return true
   // Local / LAN Vite during demos (phone on same Wi-Fi).
   return /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+):\d+$/.test(
     normalized,
