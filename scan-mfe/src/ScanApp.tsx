@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner"
 
 import { Button } from "@/components/Button"
+import { GithubLink } from "@/components/GithubLink"
 import { matchDeviceToSupply, type Extraction, type Supply } from "@/lib/extraction"
 import { newId } from "@/lib/id"
 import { isSignedIn } from "@/lib/session"
@@ -461,9 +462,15 @@ export function ScanApp({ onSignedOut }: { onSignedOut: () => void }) {
           </p>
           <h1 className="text-xl font-semibold tracking-tight">Device form camera</h1>
         </div>
-        <a href={suppliesHref} className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-          Supplies
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href={suppliesHref}
+            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Supplies
+          </a>
+          <GithubLink />
+        </div>
       </header>
 
       {!isSupabaseConfigured() ? (

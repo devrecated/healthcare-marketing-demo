@@ -4,6 +4,7 @@ import { Menu, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 
 import { SidebarBrand, SidebarNav, SidebarUser } from "@/components/console/sidebar"
+import { GithubLink } from "@/components/github-link"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -57,29 +58,32 @@ export function Topbar({
         </Sheet>
         <h1 className="font-heading text-xl tracking-tight md:text-2xl">{title}</h1>
       </div>
-      <Button
-        variant="outline"
-        className="min-h-11"
-        onClick={() => {
-          void (async () => {
-            dispatch({ type: "reset" })
-            try {
-              const res = await fetch("/api/demo/reset", { method: "POST" })
-              const body = (await res.json().catch(() => ({}))) as { error?: string }
-              if (!res.ok) {
-                toast.error(body.error || "Local demo restored; Supabase reset failed")
-                return
+      <div className="flex items-center gap-2">
+        <GithubLink />
+        <Button
+          variant="outline"
+          className="min-h-11"
+          onClick={() => {
+            void (async () => {
+              dispatch({ type: "reset" })
+              try {
+                const res = await fetch("/api/demo/reset", { method: "POST" })
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                if (!res.ok) {
+                  toast.error(body.error || "Local demo restored; Supabase reset failed")
+                  return
+                }
+                toast("Demo data restored (local + Supabase)")
+              } catch {
+                toast.error("Local demo restored; Supabase reset failed")
               }
-              toast("Demo data restored (local + Supabase)")
-            } catch {
-              toast.error("Local demo restored; Supabase reset failed")
-            }
-          })()
-        }}
-      >
-        <RotateCcw />
-        Reset data
-      </Button>
+            })()
+          }}
+        >
+          <RotateCcw />
+          Reset data
+        </Button>
+      </div>
     </header>
   )
 }

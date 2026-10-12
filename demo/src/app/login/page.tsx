@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState, type FormEvent } from "react"
 import { Eye, EyeOff } from "lucide-react"
 
+import { GithubLink } from "@/components/github-link"
 import { LoginBackdrop } from "@/components/login/login-backdrop"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,6 +42,9 @@ export default function LoginPage() {
   return (
     <main className="relative flex min-h-dvh items-center justify-center px-4">
       <LoginBackdrop />
+      <div className="absolute top-4 right-4 z-20">
+        <GithubLink tone="onDark" />
+      </div>
       <form
         onSubmit={submit}
         className="relative z-10 w-full max-w-md rounded-3xl border border-white/15 bg-[#f7f3ea]/95 p-8 text-foreground shadow-2xl backdrop-blur"

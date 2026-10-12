@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react"
 
 import { Button } from "@/components/Button"
+import { GithubLink } from "@/components/GithubLink"
 import { DEMO_EMAIL, DEMO_GATE, signIn } from "@/lib/session"
 
 export function Login({ onSignedIn }: { onSignedIn: () => void }) {
@@ -17,7 +18,10 @@ export function Login({ onSignedIn }: { onSignedIn: () => void }) {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4">
+    <main className="relative flex min-h-dvh items-center justify-center px-4">
+      <div className="absolute top-4 right-4">
+        <GithubLink />
+      </div>
       <form
         onSubmit={submit}
         className="w-full max-w-md rounded-3xl border bg-card p-8 shadow-sm"
