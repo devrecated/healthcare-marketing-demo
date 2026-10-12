@@ -56,10 +56,22 @@ export function isSupabaseConfigured() {
   return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 }
 
+/** Retired host alias from an earlier Vercel project name. */
+const RETIRED_HOST = "https://healthcare-marketing-demo.vercel.app"
+const LIVE_HOST = "https://healthcare-demo.devrecated.com"
+
+function normalizeHost(value: string) {
+  const trimmed = value.replace(/\/$/, "")
+  if (trimmed === RETIRED_HOST || trimmed.startsWith(`${RETIRED_HOST}/`)) {
+    return LIVE_HOST
+  }
+  return trimmed
+}
+
 export function apiBase() {
   const configured = import.meta.env.VITE_API_BASE
   if (configured != null && String(configured).length > 0) {
-    return String(configured).replace(/\/$/, "")
+    return normalizeHost(String(configured))
   }
   return "http://localhost:3000"
 }
@@ -67,7 +79,7 @@ export function apiBase() {
 export function hostUrl() {
   const configured = import.meta.env.VITE_HOST_URL
   if (configured != null && String(configured).length > 0) {
-    return String(configured).replace(/\/$/, "")
+    return normalizeHost(String(configured))
   }
   return "http://localhost:3000"
 }

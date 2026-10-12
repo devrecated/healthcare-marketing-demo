@@ -51,8 +51,11 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Bump when host URLs change so installed PWAs drop stale precache.
+        cacheId: "acme-scan-v2",
         globPatterns: ["**/*.{js,css,html,svg,png,ico,webp,woff2}"],
         navigateFallback: "/index.html",
+        cleanupOutdatedCaches: true,
       },
       devOptions: {
         enabled: false,
