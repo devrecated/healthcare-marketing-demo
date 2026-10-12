@@ -53,3 +53,36 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm build
+
+  e2e:
+    name: Playwright smoke
+    runs-on: ubuntu-latest
+    needs: [demo, scan-mfe]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            package.json
+            demo/pnpm-lock.yaml
+            scan-mfe/pnpm-lock.yaml
+      - name: Install root + apps
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --dir demo
+          pnpm install --frozen-lockfile --dir scan-mfe
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Smoke e2e
+        run: pnpm test:e2e
+        env:
+          CI: "1"
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_SCAN_MFE_URL: http://127.0.0.1:5173
+          VITE_API_BASE: http://127.0.0.1:3000
+          VITE_HOST_URL: http://127.0.0.1:3000

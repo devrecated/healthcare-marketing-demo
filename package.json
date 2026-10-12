@@ -1,0 +1,12 @@
+{
+  "name": "healthcare-marketing-demo",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:live": "LIVE_HOST_URL=https://healthcare-demo.devrecated.com LIVE_SCAN_URL=https://healthcare-docscan-mfe-demo.devrecated.com playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

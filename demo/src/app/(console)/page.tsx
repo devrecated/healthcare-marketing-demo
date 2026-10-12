@@ -28,7 +28,7 @@ export default function OverviewPage() {
         <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
           Today
         </p>
-        <h2 className="font-heading text-3xl tracking-tight">Ward board</h2>
+        <h2 className="font-heading text-3xl tracking-tight">Clinic board</h2>
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">
           Patients, visits, stock, and what each surgery actually costs.
         </p>

@@ -30,6 +30,12 @@ Thumbs.db
 # Cursor local (machine-specific state, not shared)
 .cursor/local/
 
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # Third-party reference clones (large; tracked upstream, not vendored here).
 # See examples/catalog.yaml for what they are and where to fetch them.
 examples/*

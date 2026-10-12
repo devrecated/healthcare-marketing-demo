@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" role="img" aria-label="Acme Healthcare">
+  <defs>
+    <linearGradient id="acme-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1c3d38"/>
+      <stop offset="100%" stop-color="#2a4a44"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="160" rx="28" fill="url(#acme-bg)"/>
+  <circle cx="78" cy="80" r="46" fill="#f7f3ea"/>
+  <path
+    d="M78 48c-14 18-22 30-22 42a22 22 0 0 0 44 0c0-12-8-24-22-42z"
+    fill="#2a4a44"
+  />
+  <circle cx="78" cy="90" r="8" fill="#f7f3ea"/>
+  <g fill="#f7f3ea">
+    <text x="148" y="78" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="700" letter-spacing="-0.02em">Acme</text>
+    <text x="148" y="118" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="500" letter-spacing="0.18em">HEALTHCARE</text>
+  </g>
+  <path d="M560 52h28v56h-28zM546 66h56v28h-56z" fill="#f7f3ea" opacity="0.9"/>
+</svg>
