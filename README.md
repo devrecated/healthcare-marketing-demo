@@ -38,6 +38,37 @@ Sign-in uses the demo password documented in [`demo/README.md`](demo/README.md).
 
 Setup details (env, Supabase migration, Vercel): see [`demo/README.md`](demo/README.md) and [`scan-mfe/README.md`](scan-mfe/README.md).
 
+## Prerequisites
+
+- pnpm 10.0.0, pinned by `packageManager` in the root `package.json`. Corepack will pick it up.
+- Node.js. No `engines` field is set in any `package.json`, so no version is pinned.
+- `rsvg-convert` on your PATH if you want to regenerate the mock forms with `pnpm fixtures`.
+
+## Environment
+
+Each app has its own `.env.example`. Copy it and fill in your own values. Never commit real keys.
+
+| App | Template | Variables |
+|-----|----------|-----------|
+| Host | [`demo/.env.example`](demo/.env.example) | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SCAN_MFE_URL` |
+| Scan MFE | [`scan-mfe/.env.example`](scan-mfe/.env.example) | `VITE_API_BASE`, `VITE_HOST_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` |
+
+## Commands
+
+Run these inside the app directory.
+
+| App | Command | What it runs |
+|-----|---------|--------------|
+| Host | `pnpm dev` / `pnpm build` / `pnpm start` | `next dev` / `next build` / `next start` |
+| Host | `pnpm lint` | `eslint` |
+| Host | `pnpm typecheck` | `tsc --noEmit` |
+| Host | `pnpm fixtures` | `scripts/make-fixtures.mjs`, which writes synthetic forms to `fixtures/forms` and `public/fixtures/forms` |
+| Host | `pnpm eval` | `scripts/eval.ts`, which runs the Gemini extractor over `fixtures/forms` and scores it against `fixtures/golden` |
+| Scan MFE | `pnpm dev` / `pnpm build` | Vite on :5173 / `tsc -b && vite build` (icons are generated first) |
+| Scan MFE | `pnpm preview` | `vite preview --port 5173 --host` |
+| Scan MFE | `pnpm typecheck` | `tsc -b --noEmit` |
+| Scan MFE | `pnpm icons` | `scripts/generate-pwa-icons.mjs` |
+
 ## Demo script
 
 1. Laptop: open the host → **Supplies** (live quantities).
